@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -26,6 +27,11 @@
             header, nav, button, .no-print { display: none !important; }
             .print-page { margin: 0; box-shadow: none; width: 100%; min-height: auto; }
             #tabPrintSheetView { display: block !important; }
+        }
+        @media screen and (max-width: 640px) {
+            #a4SheetsContainer.mobile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+            .print-page-wrapper { position: relative; width: 100%; overflow: hidden; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); background: white; }
+            .print-page-wrapper .print-page { transform-origin: top left; margin: 0 !important; box-shadow: none !important; }
         }
     </style>
 </head>
@@ -101,17 +107,17 @@
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <nav id="topNavTabs" class="flex flex-wrap gap-2 text-xs font-medium">
-                    <button onclick="switchTab('tabHomeView')" id="btnTabHomeView" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white transition flex items-center gap-1.5 shadow font-bold">
+                    <button onclick="goHome()" id="btnMain_home" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white transition flex items-center gap-1.5 shadow font-bold">
                         <i class="fa-solid fa-house"></i> 홈
                     </button>
-                    <button onclick="switchTab('tabDailyView')" id="btnTabDailyView" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-camera"></i> 사진촬영
+                    <button onclick="toggleSubMenu('photo')" id="btnMain_photo" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5 font-bold">
+                        <i class="fa-solid fa-camera"></i> 사진 <i class="fa-solid fa-chevron-down text-[10px] ml-0.5"></i>
                     </button>
-                    <button onclick="switchTab('tabPrintSheetView')" id="btnTabPrintSheetView" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-file-lines"></i> 준공대지
+                    <button onclick="toggleSubMenu('quality')" id="btnMain_quality" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5 font-bold">
+                        <i class="fa-solid fa-clipboard-check"></i> 품질 <i class="fa-solid fa-chevron-down text-[10px] ml-0.5"></i>
                     </button>
-                    <button onclick="switchTab('tabArchiveView')" id="btnTabArchiveView" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-images"></i> 보관함
+                    <button onclick="toggleSubMenu('drawing')" id="btnMain_drawing" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5 font-bold">
+                        <i class="fa-solid fa-compass-drafting"></i> 도면 <i class="fa-solid fa-chevron-down text-[10px] ml-0.5"></i>
                     </button>
                     <button onclick="handleAdminModeToggle()" id="btnTabAdminView" class="px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-white transition flex items-center gap-1.5 font-bold">
                         <i class="fa-solid fa-lock" id="adminModeBtnIcon"></i> <span id="adminModeBtnText">ADMIN 인증</span>
@@ -123,6 +129,9 @@
                     </button>
                 </div>
             </div>
+        </div>
+        <div id="subMenuBar" class="hidden bg-slate-800 border-t border-slate-700 overflow-hidden">
+            <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap gap-2"></div>
         </div>
     </header>
 
@@ -140,7 +149,7 @@
                     </p>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                    <button onclick="switchTab('tabDailyView')" class="px-6 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
+                    <button onclick="selectSubTab('photo','tabDailyView')" class="px-6 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
                         <i class="fa-solid fa-camera-retro"></i> 현장 사진 촬영 및 대지 생성
                     </button>
                 </div>
@@ -193,11 +202,20 @@
                         </div>
 
                         <!-- Multi File Input Box -->
-                        <div class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-50 hover:bg-blue-50/30 transition text-center relative">
-                            <input type="file" id="multiPhotoInput" accept="image/*" multiple onchange="handleMultiplePhotos(event)" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10">
-                            <i class="fa-solid fa-camera-retro text-3xl text-blue-500 mb-2 pointer-events-none"></i>
-                            <span class="font-bold text-xs text-slate-700 pointer-events-none">스마트폰 사진 촬영 / 갤러리 다중 선택</span>
-                            <span class="text-[11px] text-slate-400 mt-1 pointer-events-none">터치하여 현장 사진을 촬영하거나 여러 장을 한 번에 선택하세요</span>
+                        <div class="border-2 border-dashed border-slate-300 rounded-2xl p-6 flex flex-col items-center justify-center bg-slate-50 text-center">
+                            <i class="fa-solid fa-camera-retro text-3xl text-blue-500 mb-2"></i>
+                            <span class="font-bold text-xs text-slate-700">현장 사진을 촬영하거나 갤러리에서 선택하세요</span>
+                            <span class="text-[11px] text-slate-400 mt-1 mb-4">여러 장을 한 번에 선택할 수 있습니다 (파일 선택 시)</span>
+                            <div class="flex gap-2 w-full max-w-xs">
+                                <button type="button" onclick="document.getElementById('cameraPhotoInput').click()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-camera"></i> 촬영하기
+                                </button>
+                                <button type="button" onclick="document.getElementById('multiPhotoInput').click()" class="flex-1 py-2.5 bg-slate-600 hover:bg-slate-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-images"></i> 파일 선택
+                                </button>
+                            </div>
+                            <input type="file" id="cameraPhotoInput" accept="image/*" capture="environment" onchange="handleMultiplePhotos(event)" class="hidden">
+                            <input type="file" id="multiPhotoInput" accept="image/*" multiple onchange="handleMultiplePhotos(event)" class="hidden">
                         </div>
 
                         <!-- Thumbnail Grid -->
@@ -340,7 +358,7 @@
                     </div>
                 </div>
 
-                <div id="a4SheetsContainer" class="space-y-8 bg-slate-200 p-4 sm:p-8 rounded-2xl overflow-x-auto flex flex-col items-center">
+                <div id="a4SheetsContainer" class="mobile-grid space-y-8 bg-slate-200 p-4 sm:p-8 rounded-2xl overflow-x-auto sm:flex sm:flex-col sm:items-center">
                     <div class="text-center py-12 text-slate-500 text-sm">
                         등록된 준공대지 데이터가 없습니다. 첫 번째 탭에서 사진을 등록하고 동기화해 주세요.
                     </div>
@@ -359,8 +377,11 @@
                         <p class="text-xs text-slate-500">모든 기기(PC/스마트폰)에서 실시간으로 공유되는 현장 사진 보관함입니다.</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                        <input type="date" id="archiveFilterDate" onchange="renderArchiveList()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs">
+                        <input type="date" id="archiveFilterDate" onchange="renderArchiveList()" class="px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 w-full sm:w-auto min-w-[140px] appearance-auto">
                         <button onclick="resetArchiveFilter()" class="px-3 py-1.5 bg-slate-100 text-slate-600 text-xs rounded-lg hover:bg-slate-200">전체보기</button>
+                        <button onclick="downloadAllArchivePhotos()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-zipper"></i> 전체 다운로드
+                        </button>
                     </div>
                 </div>
 
@@ -453,6 +474,73 @@
                 <button type="button" onclick="saveAdminSettings()" class="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow transition">
                     <i class="fa-solid fa-floppy-disk mr-1"></i> 관리자 설정 클라우드 저장
                 </button>
+            </div>
+        </section>
+
+        <!-- 품질 하위 탭 (빈 페이지 - 추후 채움) -->
+        <section id="tabMaterialApprovalView" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-3 min-h-[420px]">
+                <i class="fa-solid fa-file-signature text-4xl text-slate-300"></i>
+                <h2 class="font-bold text-lg text-slate-700">자재공급승인요청서</h2>
+                <p class="text-xs text-slate-400">추후 콘텐츠가 채워질 예정입니다.</p>
+            </div>
+        </section>
+        <section id="tabMaterialInspectionView" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-3 min-h-[420px]">
+                <i class="fa-solid fa-magnifying-glass text-4xl text-slate-300"></i>
+                <h2 class="font-bold text-lg text-slate-700">자재검수요청서</h2>
+                <p class="text-xs text-slate-400">추후 콘텐츠가 채워질 예정입니다.</p>
+            </div>
+        </section>
+        <section id="tabQualityTestView" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-3 min-h-[420px]">
+                <i class="fa-solid fa-vial text-4xl text-slate-300"></i>
+                <h2 class="font-bold text-lg text-slate-700">품질시험</h2>
+                <p class="text-xs text-slate-400">추후 콘텐츠가 채워질 예정입니다.</p>
+            </div>
+        </section>
+
+        <!-- 도면 하위 탭 (빈 페이지 - 추후 채움) -->
+        <section id="tabDrawingOverviewView" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-3 min-h-[420px]">
+                <i class="fa-solid fa-list-check text-4xl text-slate-300"></i>
+                <h2 class="font-bold text-lg text-slate-700">개요</h2>
+                <p class="text-xs text-slate-400">추후 콘텐츠가 채워질 예정입니다.</p>
+            </div>
+        </section>
+        <section id="tabDrawingPlanView" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-3 min-h-[420px]">
+                <i class="fa-solid fa-border-all text-4xl text-slate-300"></i>
+                <h2 class="font-bold text-lg text-slate-700">평면도</h2>
+                <p class="text-xs text-slate-400">추후 콘텐츠가 채워질 예정입니다.</p>
+            </div>
+        </section>
+        <section id="tabDrawingElevationView" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-3 min-h-[420px]">
+                <i class="fa-solid fa-building text-4xl text-slate-300"></i>
+                <h2 class="font-bold text-lg text-slate-700">입면도</h2>
+                <p class="text-xs text-slate-400">추후 콘텐츠가 채워질 예정입니다.</p>
+            </div>
+        </section>
+        <section id="tabDrawingBirdseyeView" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-3 min-h-[420px]">
+                <i class="fa-solid fa-mountain-sun text-4xl text-slate-300"></i>
+                <h2 class="font-bold text-lg text-slate-700">조감도</h2>
+                <p class="text-xs text-slate-400">추후 콘텐츠가 채워질 예정입니다.</p>
+            </div>
+        </section>
+        <section id="tabDrawing3DView" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-3 min-h-[420px]">
+                <i class="fa-solid fa-cube text-4xl text-slate-300"></i>
+                <h2 class="font-bold text-lg text-slate-700">3D</h2>
+                <p class="text-xs text-slate-400">추후 콘텐츠가 채워질 예정입니다.</p>
+            </div>
+        </section>
+        <section id="tabDrawingFinishView" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-3 min-h-[420px]">
+                <i class="fa-solid fa-paint-roller text-4xl text-slate-300"></i>
+                <h2 class="font-bold text-lg text-slate-700">마감</h2>
+                <p class="text-xs text-slate-400">추후 콘텐츠가 채워질 예정입니다.</p>
             </div>
         </section>
     </main>
@@ -772,6 +860,8 @@
                 document.getElementById('adminInputPassword').value = '';
                 document.getElementById('adminInputPassword').focus();
             } else {
+                closeSubMenu();
+                highlightMainNav(null);
                 switchTab('tabAdminView');
             }
         };
@@ -786,6 +876,8 @@
                 isAdminMode = true;
                 closeAdminPrompt();
                 updateAdminButtonState();
+                closeSubMenu();
+                highlightMainNav(null);
                 switchTab('tabAdminView');
                 renderAdminUserTable();
                 renderAdminPhotoEditorList();
@@ -815,26 +907,29 @@
         window.exitAdminMode = function() {
             isAdminMode = false;
             updateAdminButtonState();
-            switchTab('tabHomeView');
+            goHome();
             renderArchiveList();
             showToast("일반 모드로 전환되었습니다.");
         };
 
+        const ALL_TAB_IDS = ['tabHomeView', 'tabDailyView', 'tabPrintSheetView', 'tabArchiveView', 'tabAdminView',
+            'tabMaterialApprovalView', 'tabMaterialInspectionView', 'tabQualityTestView',
+            'tabDrawingOverviewView', 'tabDrawingPlanView', 'tabDrawingElevationView', 'tabDrawingBirdseyeView', 'tabDrawing3DView', 'tabDrawingFinishView'];
+
         window.switchTab = function(tabId) {
-            ['tabHomeView', 'tabDailyView', 'tabPrintSheetView', 'tabArchiveView', 'tabAdminView'].forEach(id => {
+            ALL_TAB_IDS.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
             });
-            ['btnTabHomeView', 'btnTabDailyView', 'btnTabPrintSheetView', 'btnTabArchiveView', 'btnTabAdminView'].forEach(id => {
-                const btn = document.getElementById(id);
-                if (btn) {
-                    if (id === 'btnTabAdminView') {
-                        btn.className = "px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5 font-bold";
-                    } else {
-                        btn.className = "px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5";
-                    }
+
+            const adminBtn = document.getElementById('btnTabAdminView');
+            if (adminBtn) {
+                if (tabId === 'tabAdminView') {
+                    adminBtn.className = "px-3 py-1.5 rounded-lg bg-amber-500 text-slate-900 hover:bg-amber-400 transition flex items-center gap-1.5 font-extrabold";
+                } else {
+                    adminBtn.className = "px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-white transition flex items-center gap-1.5 font-bold";
                 }
-            });
+            }
 
             const targetEl = document.getElementById(tabId);
             if (targetEl) targetEl.classList.remove('hidden');
@@ -844,17 +939,90 @@
                 renderAdminPhotoEditorList();
             }
 
-            const activeBtnMap = {
-                'tabHomeView': 'btnTabHomeView',
-                'tabDailyView': 'btnTabDailyView',
-                'tabPrintSheetView': 'btnTabPrintSheetView',
-                'tabArchiveView': 'btnTabArchiveView',
-                'tabAdminView': 'btnTabAdminView'
-            };
-            const activeBtn = document.getElementById(activeBtnMap[tabId]);
-            if (activeBtn) {
-                activeBtn.className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white transition flex items-center gap-1.5 shadow font-bold";
+            if (tabId === 'tabArchiveView') {
+                const todayStr = new Date().toISOString().slice(0, 10);
+                const filterInput = document.getElementById('archiveFilterDate');
+                if (filterInput && filterInput.value !== todayStr) {
+                    filterInput.value = todayStr;
+                }
+                renderArchiveList();
             }
+        };
+
+        const subMenuConfig = {
+            photo: [
+                { id: 'tabDailyView', icon: 'fa-camera', label: '사진촬영' },
+                { id: 'tabPrintSheetView', icon: 'fa-file-lines', label: '준공대지' },
+                { id: 'tabArchiveView', icon: 'fa-images', label: '보관함' }
+            ],
+            quality: [
+                { id: 'tabMaterialApprovalView', icon: 'fa-file-signature', label: '자재공급승인요청서' },
+                { id: 'tabMaterialInspectionView', icon: 'fa-magnifying-glass', label: '자재검수요청서' },
+                { id: 'tabQualityTestView', icon: 'fa-vial', label: '품질시험' }
+            ],
+            drawing: [
+                { id: 'tabDrawingOverviewView', icon: 'fa-list-check', label: '개요' },
+                { id: 'tabDrawingPlanView', icon: 'fa-border-all', label: '평면도' },
+                { id: 'tabDrawingElevationView', icon: 'fa-building', label: '입면도' },
+                { id: 'tabDrawingBirdseyeView', icon: 'fa-mountain-sun', label: '조감도' },
+                { id: 'tabDrawing3DView', icon: 'fa-cube', label: '3D' },
+                { id: 'tabDrawingFinishView', icon: 'fa-paint-roller', label: '마감' }
+            ]
+        };
+        let currentSubCategory = null;
+
+        function highlightMainNav(activeKey) {
+            ['home', 'photo', 'quality', 'drawing'].forEach(key => {
+                const btn = document.getElementById('btnMain_' + key);
+                if (!btn) return;
+                btn.className = (key === activeKey)
+                    ? "px-3 py-1.5 rounded-lg bg-blue-600 text-white transition flex items-center gap-1.5 shadow font-bold"
+                    : "px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5 font-bold";
+            });
+        }
+
+        function closeSubMenu() {
+            currentSubCategory = null;
+            const bar = document.getElementById('subMenuBar');
+            if (!bar) return;
+            bar.classList.add('hidden');
+            const wrap = bar.querySelector('div');
+            if (wrap) wrap.innerHTML = '';
+        }
+
+        function renderSubMenu(category, activeTabId) {
+            const bar = document.getElementById('subMenuBar');
+            const wrap = bar.querySelector('div');
+            wrap.innerHTML = subMenuConfig[category].map(it => `
+                <button onclick="selectSubTab('${category}','${it.id}')" id="btnSub_${it.id}" class="px-3 py-1.5 rounded-lg ${it.id === activeTabId ? 'bg-blue-500 text-white shadow' : 'bg-slate-700 text-slate-200 hover:bg-slate-600'} transition flex items-center gap-1.5 text-xs font-bold">
+                    <i class="fa-solid ${it.icon}"></i> ${it.label}
+                </button>
+            `).join('');
+            bar.classList.remove('hidden');
+        }
+
+        window.toggleSubMenu = function(category) {
+            if (currentSubCategory === category) {
+                closeSubMenu();
+                highlightMainNav(null);
+                return;
+            }
+            currentSubCategory = category;
+            renderSubMenu(category, null);
+            highlightMainNav(category);
+        };
+
+        window.selectSubTab = function(category, tabId) {
+            currentSubCategory = category;
+            renderSubMenu(category, tabId);
+            highlightMainNav(category);
+            switchTab(tabId);
+        };
+
+        window.goHome = function() {
+            closeSubMenu();
+            highlightMainNav('home');
+            switchTab('tabHomeView');
         };
 
         window.handleMultiplePhotos = function(event) {
@@ -902,6 +1070,7 @@
                 reader.readAsDataURL(file);
             });
             showToast(`${files.length}장의 사진이 등록되었습니다.`);
+            event.target.value = '';
         };
 
         function renderThumbnailGrid() {
@@ -1046,7 +1215,7 @@
                 msg += "[밴드복사완료]";
             }
             showToast(msg);
-            switchTab('tabPrintSheetView');
+            selectSubTab('photo', 'tabPrintSheetView');
         };
 
         function updateDashboardCounts() {
@@ -1080,6 +1249,7 @@
                 };
 
                 html += `
+                    <div class="print-page-wrapper">
                     <div id="printSheetPage_${pageIndex}" class="print-page bg-white shadow-2xl rounded-xl border border-slate-400 p-8 flex flex-col justify-between relative" style="width: 210mm; min-height: 297mm; font-family: 'Inter', sans-serif;">
                         <table class="w-full border-collapse border-2 border-black text-center mb-4">
                             <thead>
@@ -1130,10 +1300,28 @@
                             ${siteSettings.siteName} 스마트건설관리 시스템
                         </div>
                     </div>
+                    </div>
                 `;
             }
             container.innerHTML = html;
+            applyMobilePrintScale();
         }
+
+        function applyMobilePrintScale() {
+            if (window.innerWidth >= 640) return;
+            const A4_W = 794, A4_H = 1123;
+            document.querySelectorAll('.print-page-wrapper').forEach(wrapper => {
+                const scale = wrapper.clientWidth / A4_W;
+                const page = wrapper.querySelector('.print-page');
+                if (page) page.style.transform = `scale(${scale})`;
+                wrapper.style.height = `${A4_H * scale}px`;
+            });
+        }
+        window.addEventListener('resize', () => {
+            if (document.getElementById('tabPrintSheetView') && !document.getElementById('tabPrintSheetView').classList.contains('hidden')) {
+                applyMobilePrintScale();
+            }
+        });
 
         window.deleteSheetPhotoIndex = async function(idx) {
             if (!window.confirm(`정말로 준공대지 #${idx+1} 사진을 삭제하시겠습니까?`)) return;
@@ -1159,6 +1347,9 @@
 
             grid.innerHTML = filtered.map(item => `
                 <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between relative group">
+                    <button onclick="downloadArchivePhoto(${item.originalIndex})" class="absolute top-2 ${isAdminMode ? 'right-12' : 'right-2'} bg-blue-600 hover:bg-blue-700 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-lg z-10 transition" title="이 사진 다운로드">
+                        <i class="fa-solid fa-download"></i>
+                    </button>
                     ${isAdminMode ? `
                     <button onclick="deleteArchivePhotoIndex(${item.originalIndex})" class="absolute top-2 right-2 bg-rose-600 hover:bg-rose-700 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-lg z-10 transition" title="보관함에서 삭제">
                         <i class="fa-solid fa-trash-can"></i>
@@ -1190,6 +1381,42 @@
             archiveList.splice(idx, 1);
             await saveGlobalPublicPhotosToCloud();
             showToast("보관함 사진이 삭제되었습니다.");
+        };
+
+        window.downloadArchivePhoto = function(idx) {
+            const item = archiveList[idx];
+            if (!item) return;
+            const link = document.createElement('a');
+            link.download = `${siteSettings.siteName}_${item.date}_${idx+1}.jpg`;
+            link.href = item.imageUrl;
+            link.click();
+        };
+
+        window.downloadAllArchivePhotos = async function() {
+            const filterDate = document.getElementById('archiveFilterDate').value;
+            let targets = archiveList.map((item, originalIndex) => ({ ...item, originalIndex }));
+            if (filterDate) targets = targets.filter(item => item.date === filterDate);
+
+            if (targets.length === 0) {
+                showToast("다운로드할 사진이 없습니다.");
+                return;
+            }
+            if (typeof JSZip === 'undefined') {
+                showToast("압축 다운로드 기능을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.");
+                return;
+            }
+            showToast(`📦 사진 ${targets.length}장을 압축하는 중입니다...`);
+            const zip = new JSZip();
+            targets.forEach((item, i) => {
+                const base64Data = item.imageUrl.split(',')[1];
+                zip.file(`${item.date}_${i+1}.jpg`, base64Data, { base64: true });
+            });
+            const blob = await zip.generateAsync({ type: 'blob' });
+            const link = document.createElement('a');
+            link.download = `보관함사진_${new Date().toISOString().slice(0,10)}.zip`;
+            link.href = URL.createObjectURL(blob);
+            link.click();
+            showToast("✨ 전체 사진 압축 다운로드 완료!");
         };
 
         window.resetArchiveFilter = function() {
