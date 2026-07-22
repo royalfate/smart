@@ -360,7 +360,7 @@
                         <h2 class="font-bold text-lg text-slate-800 flex items-center gap-2">
                             <i class="fa-solid fa-images text-blue-600"></i> 현장 사진 포트폴리오 클라우드 보관함
                         </h2>
-                        <p class="text-xs text-slate-500">모든 기기에서 실시간 동기화되는 현장 사진 보관함입니다. 개별 삭제를 지원합니다.</p>
+                        <p class="text-xs text-slate-500">모든 기기에서 실시간 동기화되는 현장 사진 보관함입니다. 세로형 포트폴리오 1장 이미지로 저장할 수 있습니다.</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                         <input type="date" id="archiveFilterDate" onchange="renderArchiveList()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs">
@@ -371,12 +371,12 @@
                 <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div class="space-y-1 text-center sm:text-left">
                         <span class="text-xs font-black text-blue-900 flex items-center gap-1.5 justify-center sm:justify-start">
-                            <i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i> 밴드 게시용 일체형 포트폴리오 카드 이미지 다운로드
+                            <i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i> 세로형 일체형 포트폴리오 카드 이미지 다운로드 (사진 상단 + 글 하단)
                         </span>
-                        <p class="text-[11px] text-slate-600">클라우드에 동기화된 모든 사진과 작업 내용을 단일 포트폴리오 이미지(1장)로 만들어 밴드에 한 번에 올릴 수 있습니다!</p>
+                        <p class="text-[11px] text-slate-600">클라우드에 동기화된 모든 현장 사진과 작업 내용을 <strong>사진이 위에 있고 글이 아래에 있는 세로형 1장 이미지</strong>로 완벽하게 변환합니다!</p>
                     </div>
                     <button onclick="downloadSinglePortfolioImage()" class="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-lg transition flex items-center gap-2 whitespace-nowrap">
-                        <i class="fa-solid fa-image"></i> 🖼️ 1장 포트폴리오 저장
+                        <i class="fa-solid fa-image"></i> 🖼️ 세로형 1장 포트폴리오 저장
                     </button>
                 </div>
 
@@ -460,8 +460,7 @@
             </div>
         </section>
     </main>
-
-    <!-- Hidden Export Card Container -->
+    <!-- Hidden Export Card Container (Vertical 1-page format: Photo on top, text below) -->
     <div id="singlePortfolioExportWrapper" class="fixed -top-[9999px] left-0 bg-slate-900 p-8 w-[800px]" style="font-family: 'Inter', sans-serif;">
         <div id="singlePortfolioExportCard" class="bg-white rounded-3xl p-8 shadow-2xl space-y-6">
             <div class="border-b pb-4 flex justify-between items-center">
@@ -473,6 +472,7 @@
                     날짜: 2026-07-22
                 </div>
             </div>
+            <!-- Vertical card items: Photo top, text bottom -->
             <div id="exportCardsGrid" class="space-y-6"></div>
             <div class="pt-4 border-t text-center text-xs text-slate-400">
                 스마트건설관리 클라우드 시스템 | 감리단 및 시공사 공동 관리대장
@@ -1170,7 +1170,7 @@
             }
 
             if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 text-xs">보관된 항목이 없습니다.</div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 text-xs bg-white rounded-2xl border border-slate-200">보관된 항목이 없습니다. (사진을 등록하고 클라우드 동기화 또는 준공대지 반영을 진행해 주세요.)</div>`;
                 return;
             }
 
@@ -1180,7 +1180,7 @@
                         <i class="fa-solid fa-trash-can"></i>
                     </button>
                     <div>
-                        <div class="h-48 overflow-hidden bg-slate-100">
+                        <div class="h-48 overflow-hidden bg-slate-100 flex items-center justify-center">
                             <img src="${item.imageUrl}" class="w-full h-full object-cover">
                         </div>
                         <div class="p-4 space-y-2">
@@ -1213,20 +1213,27 @@
                 showToast("포트폴리오로 생성할 사진이 없습니다.");
                 return;
             }
-            showToast("🖼️ 단일 포트폴리오 이미지를 생성 중입니다...");
+            showToast("🖼️ 세로형 1장 포트폴리오 이미지를 생성 중입니다...");
 
             document.getElementById('exportBadgeSiteName').innerText = `${siteSettings.siteName} 현장일보`;
             document.getElementById('exportDateLabel').innerText = `날짜: ${new Date().toISOString().slice(0, 10)}`;
 
             const cardsGrid = document.getElementById('exportCardsGrid');
+            // Vertical card layout: Photo on top, text below
             cardsGrid.innerHTML = archiveList.map((item, idx) => `
-                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex gap-4 items-center">
-                    <img src="${item.imageUrl}" class="w-48 h-48 object-cover rounded-xl border shadow-sm flex-shrink-0">
-                    <div class="space-y-2 flex-1">
-                        <span class="bg-blue-600 text-white text-[10px] px-2.5 py-1 rounded-full font-bold">#${idx+1} 현장 사진</span>
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex flex-col items-center gap-4 shadow-sm">
+                    <div class="w-full flex justify-between items-center border-b pb-2">
+                        <span class="bg-blue-600 text-white text-xs px-3 py-1 rounded-full font-bold">#${idx+1} 현장 사진</span>
+                        <span class="text-xs text-slate-500 font-mono"><i class="fa-regular fa-calendar mr-1"></i>${item.date}</span>
+                    </div>
+                    <!-- Photo on top -->
+                    <div class="w-full h-[400px] bg-slate-200 rounded-xl overflow-hidden border shadow-inner flex items-center justify-center">
+                        <img src="${item.imageUrl}" class="w-full h-full object-cover">
+                    </div>
+                    <!-- Description text below -->
+                    <div class="w-full space-y-2 text-left bg-white p-4 rounded-xl border shadow-sm">
                         <h4 class="font-black text-sm text-slate-900">${item.location}</h4>
-                        <p class="text-xs text-slate-700 bg-white p-3 rounded-xl border">${item.description || '특이사항 없음'}</p>
-                        <span class="text-[10px] text-slate-400 block">촬영일: ${item.date}</span>
+                        <p class="text-xs text-slate-700 leading-relaxed font-medium">${item.description || '특이사항 없음'}</p>
                     </div>
                 </div>
             `).join('');
@@ -1235,10 +1242,10 @@
             try {
                 const canvas = await html2canvas(wrapper, { scale: 2, useCORS: true });
                 const link = document.createElement('a');
-                link.download = `현장포트폴리오_${new Date().toISOString().slice(0,10)}.png`;
+                link.download = `현장세로형포트폴리오_${new Date().toISOString().slice(0,10)}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
-                showToast("✨ 1장 포트폴리오 이미지 저장 완료!");
+                showToast("✨ 세로형 1장 포트폴리오 이미지 저장 완료!");
             } catch (e) {
                 showToast("이미지 생성 중 오류가 발생했습니다.");
             }
