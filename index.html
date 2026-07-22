@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>스마트건설관리 - 강릉 NH금융센터 현장일보 (ADMIN 인증 보안)</title>
+    <title>스마트건설관리 - 강릉 NH금융센터 현장일보 (클라우드 동기화)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,7 +20,6 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
 
-    <!-- Auth / Login Overlay View (Initially Active if not logged in) -->
     <div id="authOverlay" class="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl p-8 space-y-6">
             <div class="text-center space-y-2">
@@ -28,7 +27,7 @@
                     <i class="fa-solid fa-hard-hat"></i>
                 </div>
                 <h2 class="text-2xl font-black text-slate-900">스마트건설관리 시스템</h2>
-                <p class="text-xs text-slate-500">강릉 NH금융센터 현장일보 접근을 위해 로그인 또는 회원가입이 필요합니다.</p>
+                <p class="text-xs text-slate-500">모바일과 PC 간 실시간 클라우드 동기화를 지원합니다.</p>
             </div>
 
             <!-- Tab Switcher for Login / Register -->
@@ -58,12 +57,11 @@
             </div>
 
             <div class="text-center text-[11px] text-slate-400">
-                🔒 조직 외 인원은 접근할 수 없으며 관리자에 의해 통제됩니다.
+                ☁️ 클라우드 DB 연동으로 모바일에서 저장한 자료가 PC에서도 즉시 동기화됩니다.
             </div>
         </div>
     </div>
 
-    <!-- Admin Password Prompt Modal -->
     <div id="adminPromptModal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 space-y-4">
             <div class="text-center space-y-1">
@@ -83,7 +81,6 @@
         </div>
     </div>
 
-    <!-- Main Header -->
     <header id="mainHeader" class="bg-slate-900 text-white shadow-md sticky top-0 z-40 hidden">
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="flex items-center gap-2">
@@ -121,7 +118,6 @@
         </div>
     </header>
 
-    <!-- Main Content Area -->
     <main id="mainContentArea" class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6 hidden">
 
         <!-- Tab 0: Home / Main Dashboard -->
@@ -129,11 +125,11 @@
             <div class="bg-gradient-to-br from-blue-900 to-slate-900 text-white p-6 sm:p-10 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="space-y-3">
                     <span class="bg-blue-600/40 text-blue-300 border border-blue-400/30 px-3 py-1 rounded-full text-xs font-bold inline-block">
-                        <i class="fa-solid fa-circle-check mr-1 text-emerald-400"></i> 로그인 인증됨 | 현장관리 시스템 활성화
+                        <i class="fa-solid fa-cloud-circle-check mr-1 text-emerald-400"></i> 클라우드 실시간 동기화 활성화됨
                     </span>
                     <h2 id="welcomeUserTitle" class="text-2xl sm:text-3xl font-black tracking-tight">강릉 NH금융센터 신축공사 현장일보</h2>
                     <p class="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
-                        현장 사진을 여러 장 선택하고, 세부 공종 버튼을 눌러 작업 내용을 자동 입력하세요. 준공사진대지 인쇄부터 밴드 공유용 포트폴리오까지 원클릭으로 해결할 수 있습니다.
+                        스마트폰으로 현장 사진을 촬영하고 저장하면, 클라우드 DB를 통해 PC 및 다른 기기에서도 동일한 계정으로 즉시 연동되어 확인 및 인쇄가 가능합니다.
                     </p>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
@@ -168,7 +164,7 @@
                         <i class="fa-solid fa-cloud-arrow-up"></i>
                     </div>
                     <div>
-                        <span class="text-xs text-slate-500 font-medium block">보관함 포트폴리오</span>
+                        <span class="text-xs text-slate-500 font-medium block">클라우드 보관함</span>
                         <span id="dashArchiveCount" class="text-xl font-black text-slate-900">0개 항목</span>
                     </div>
                 </div>
@@ -225,7 +221,7 @@
                                     <input type="checkbox" id="syncSheet" checked class="rounded text-blue-600 focus:ring-blue-500"> 📄 준공대지
                                 </label>
                                 <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="syncArchive" checked class="rounded text-blue-600 focus:ring-blue-500"> 📁 보관함
+                                    <input type="checkbox" id="syncArchive" checked class="rounded text-blue-600 focus:ring-blue-500"> 📁 클라우드 보관함
                                 </label>
                             </div>
                         </div>
@@ -309,7 +305,7 @@
                                 <i class="fa-regular fa-copy"></i> 밴드문구 복사
                             </button>
                             <button onclick="savePhotosAndSheetData()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-floppy-disk"></i> 사진대지 & 보관함 일괄 저장
+                                <i class="fa-solid fa-cloud-arrow-up"></i> 클라우드 보관함 & 대지 저장
                             </button>
                         </div>
                     </div>
@@ -323,9 +319,9 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h2 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-                            <i class="fa-solid fa-file-lines text-blue-600"></i> 공식 준공 사진대지 (A4 표준 양식)
+                            <i class="fa-solid fa-file-lines text-blue-600"></i> 공식 준공 사진대지 (클라우드 동기화)
                         </h2>
-                        <p class="text-xs text-slate-500">등록된 사진들이 A4 1장당 2구(2장)씩 자동으로 매칭되어 인쇄용으로 출력됩니다.</p>
+                        <p class="text-xs text-slate-500">클라우드에 저장된 사진들이 A4 1장당 2구(2장)씩 자동으로 매칭되어 PC와 모바일에서 동일하게 출력됩니다.</p>
                     </div>
                     <div id="sheetEditControls" class="flex gap-2">
                         <!-- Controls will render based on Admin mode -->
@@ -334,7 +330,7 @@
 
                 <div id="a4SheetsContainer" class="space-y-8 bg-slate-200 p-4 sm:p-8 rounded-2xl overflow-x-auto flex flex-col items-center">
                     <div class="text-center py-12 text-slate-500 text-sm">
-                        저장된 사진대지 데이터가 없습니다. 첫 번째 탭에서 사진을 등록하고 저장해 주세요.
+                        클라우드에 저장된 사진대지 데이터가 없습니다. 첫 번째 탭에서 사진을 등록하고 저장해 주세요.
                     </div>
                 </div>
             </div>
@@ -346,9 +342,9 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h2 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-                            <i class="fa-solid fa-images text-blue-600"></i> 현장 사진 포트폴리오 보관함 (검색 & 밴드 공유용)
+                            <i class="fa-solid fa-images text-blue-600"></i> 현장 사진 포트폴리오 클라우드 보관함
                         </h2>
-                        <p class="text-xs text-slate-500">등록된 사진을 날짜별로 검색하고, 단건 카드 및 1장 포트폴리오로 다운로드합니다.</p>
+                        <p class="text-xs text-slate-500">스마트폰과 PC 간 실시간으로 연동되는 보관함입니다. 날짜별 검색 및 포트폴리오 다운로드가 가능합니다.</p>
                     </div>
                     <div class="flex items-center gap-2 w-full sm:w-auto">
                         <input type="date" id="archiveFilterDate" onchange="renderArchiveList()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs">
@@ -361,7 +357,7 @@
                         <span class="font-bold text-blue-900 text-xs block mb-1">
                             <i class="fa-solid fa-wand-magic-sparkles mr-1 text-blue-600"></i> 밴드 게시용 일체형 포트폴리오 카드 이미지 다운로드
                         </span>
-                        <p class="text-[11px] text-slate-600">보관함에 있는 모든 사진과 작업 내용을 <strong>사진-글-사진-글 형식의 단일 포트폴리오 이미지(1장)</strong>로 만들어 밴드에 한 번에 올릴 수 있습니다!</p>
+                        <p class="text-[11px] text-slate-600">클라우드에 동기화된 모든 사진과 작업 내용을 <strong>단일 포트폴리오 이미지(1장)</strong>로 만들어 밴드에 한 번에 올릴 수 있습니다!</p>
                     </div>
                     <button onclick="downloadMultiPhotoPortfolio()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow flex items-center justify-center gap-1.5 transition w-full sm:w-auto">
                         <i class="fa-solid fa-images"></i> 📸 1장 포트폴리오 저장
@@ -419,7 +415,11 @@
         <span id="toastText">작업이 완료되었습니다.</span>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
         let currentSite = "강릉 NH금융센터 신축공사";
         let activePhotoList = [];
         let activeSelectedIndex = 0;
@@ -430,8 +430,31 @@
         let authMode = 'login'; // 'login' or 'register'
         let isAdminMode = false;
 
-        window.onload = function() {
-            loadRegisteredUsers();
+        let db, auth, appId, userId;
+        let unsubscribeArchive = null;
+        let unsubscribeSheet = null;
+
+        window.onload = async function() {
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "demo", projectId: "demo" };
+            appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                userId = auth.currentUser ? auth.currentUser.uid : crypto.randomUUID();
+            } catch (e) {
+                userId = crypto.randomUUID();
+            }
+
+            await loadRegisteredUsersFromCloud();
+
             const savedUser = localStorage.getItem('smart_construction_current_user');
             if (savedUser) {
                 try {
@@ -445,25 +468,37 @@
             }
         };
 
-        function loadRegisteredUsers() {
+        async function loadRegisteredUsersFromCloud() {
+            if (!db) return;
             try {
-                const data = localStorage.getItem('smart_construction_users_db');
-                if (data) {
-                    registeredUsers = JSON.parse(data);
+                const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'system_users_db');
+                const snap = await getDoc(userRef);
+                if (snap.exists()) {
+                    registeredUsers = snap.data().users || [];
                 } else {
-                    // Default admin or test user
                     registeredUsers = [
                         { userId: 'admin', name: '현장총괄 관리자', password: 'admin' },
                         { userId: 'manager1', name: '김소장 (골조팀)', password: '123' }
                     ];
-                    localStorage.setItem('smart_construction_users_db', JSON.stringify(registeredUsers));
+                    await setDoc(userRef, { users: registeredUsers });
                 }
             } catch(e) {
-                registeredUsers = [];
+                registeredUsers = [
+                    { userId: 'admin', name: '현장총괄 관리자', password: 'admin' },
+                    { userId: 'manager1', name: '김소장 (골조팀)', password: '123' }
+                ];
             }
         }
 
-        function switchAuthTab(mode) {
+        async function saveRegisteredUsersToCloud() {
+            if (!db) return;
+            try {
+                const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'system_users_db');
+                await setDoc(userRef, { users: registeredUsers });
+            } catch(e) {}
+        }
+
+        window.switchAuthTab = function(mode) {
             authMode = mode;
             const btnLogin = document.getElementById('authTabLogin');
             const btnRegister = document.getElementById('authTabRegister');
@@ -483,7 +518,7 @@
             }
         }
 
-        function handleAuthSubmit() {
+        window.handleAuthSubmit = async function() {
             const uidInput = document.getElementById('authUserId').value.trim();
             const pwdInput = document.getElementById('authPassword').value.trim();
             const nameInput = document.getElementById('authName').value.trim();
@@ -493,7 +528,7 @@
                 return;
             }
 
-            loadRegisteredUsers();
+            await loadRegisteredUsersFromCloud();
 
             if (authMode === 'register') {
                 if (!nameInput) {
@@ -506,11 +541,11 @@
                 }
                 const newUser = { userId: uidInput, name: nameInput, password: pwdInput };
                 registeredUsers.push(newUser);
-                localStorage.setItem('smart_construction_users_db', JSON.stringify(registeredUsers));
+                await saveRegisteredUsersToCloud();
                 
                 currentUser = newUser;
                 localStorage.setItem('smart_construction_current_user', JSON.stringify(currentUser));
-                showToast("회원가입 및 로그인 완료!");
+                showToast("클라우드 회원가입 및 로그인 완료!");
                 unlockApp(currentUser);
             } else {
                 const found = registeredUsers.find(u => u.userId === uidInput && u.password === pwdInput);
@@ -520,7 +555,7 @@
                 }
                 currentUser = found;
                 localStorage.setItem('smart_construction_current_user', JSON.stringify(currentUser));
-                showToast(`${currentUser.name}님 환영합니다!`);
+                showToast(`${currentUser.name}님 클라우드 접속 완료!`);
                 unlockApp(currentUser);
             }
         }
@@ -533,27 +568,54 @@
             const titleEl = document.getElementById('welcomeUserTitle');
             if (titleEl) titleEl.innerText = `${user.name}님 환영합니다 | 강릉 NH금융센터 신축공사`;
 
-            try {
-                const savedArchive = localStorage.getItem('smart_construction_archive');
-                if (savedArchive) archiveList = JSON.parse(savedArchive);
-                const savedSheet = localStorage.getItem('smart_construction_sheet');
-                if (savedSheet) sheetPhotoList = JSON.parse(savedSheet);
-            } catch (e) {}
-
-            updateDashboardCounts();
-            renderUploadThumbnails();
-            renderPrintSheets();
-            renderArchiveList();
-            regenerateBandText();
+            setupCloudSync(user.userId);
         }
 
-        function lockApp() {
+        function setupCloudSync(targetUid) {
+            if (!db) return;
+
+            // Unsubscribe previous listeners if any
+            if (unsubscribeArchive) unsubscribeArchive();
+            if (unsubscribeSheet) unsubscribeSheet();
+
+            // 1. Listen to Archive data
+            const archiveRef = doc(db, 'artifacts', appId, 'users', targetUid, 'data_store', 'archive_data');
+            unsubscribeArchive = onSnapshot(archiveRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    archiveList = docSnap.data().items || [];
+                } else {
+                    archiveList = [];
+                }
+                updateDashboardCounts();
+                renderArchiveList();
+            }, (err) => {
+                archiveList = [];
+            });
+
+            // 2. Listen to Sheet data
+            const sheetRef = doc(db, 'artifacts', appId, 'users', targetUid, 'data_store', 'sheet_data');
+            unsubscribeSheet = onSnapshot(sheetRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    sheetPhotoList = docSnap.data().items || [];
+                } else {
+                    sheetPhotoList = [];
+                }
+                updateDashboardCounts();
+                renderPrintSheets();
+            }, (err) => {
+                sheetPhotoList = [];
+            });
+        }
+
+        window.lockApp = function() {
+            if (unsubscribeArchive) unsubscribeArchive();
+            if (unsubscribeSheet) unsubscribeSheet();
             document.getElementById('authOverlay').classList.remove('hidden');
             document.getElementById('mainHeader').classList.add('hidden');
             document.getElementById('mainContentArea').classList.add('hidden');
         }
 
-        function handleLogout() {
+        window.handleLogout = function() {
             localStorage.removeItem('smart_construction_current_user');
             currentUser = null;
             isAdminMode = false;
@@ -562,17 +624,17 @@
             showToast("로그아웃 되었습니다.");
         }
 
-        function requestAdminMode() {
+        window.requestAdminMode = function() {
             document.getElementById('adminPromptModal').classList.remove('hidden');
             document.getElementById('adminInputPassword').value = '';
             document.getElementById('adminInputPassword').focus();
         }
 
-        function closeAdminPrompt() {
+        window.closeAdminPrompt = function() {
             document.getElementById('adminPromptModal').classList.add('hidden');
         }
 
-        function verifyAdminPassword() {
+        window.verifyAdminPassword = function() {
             const pwd = document.getElementById('adminInputPassword').value.trim();
             if (pwd === "1773") {
                 isAdminMode = true;
@@ -587,7 +649,7 @@
             }
         }
 
-        function exitAdminMode() {
+        window.exitAdminMode = function() {
             isAdminMode = false;
             document.getElementById('btnTabAdminView').classList.add('hidden');
             document.getElementById('adminModeBtn').innerHTML = `<i class="fa-solid fa-lock"></i> ADMIN`;
@@ -596,7 +658,7 @@
             switchTab('tabHomeView');
         }
 
-        function switchTab(tabId) {
+        window.switchTab = function(tabId) {
             document.getElementById('tabHomeView').classList.add('hidden');
             document.getElementById('tabDailyView').classList.add('hidden');
             document.getElementById('tabPrintSheetView').classList.add('hidden');
@@ -632,8 +694,8 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function renderAdminUserTable() {
-            loadRegisteredUsers();
+        async function renderAdminUserTable() {
+            await loadRegisteredUsersFromCloud();
             const tbody = document.getElementById('adminUserTableBody');
             const badge = document.getElementById('adminUserCountBadge');
             if (badge) badge.innerText = `${registeredUsers.length}명 등록됨`;
@@ -651,10 +713,9 @@
             `).join('');
         }
 
-        function deleteUser(uid) {
-            loadRegisteredUsers();
+        window.deleteUser = async function(uid) {
             registeredUsers = registeredUsers.filter(u => u.userId !== uid);
-            localStorage.setItem('smart_construction_users_db', JSON.stringify(registeredUsers));
+            await saveRegisteredUsersToCloud();
             renderAdminUserTable();
             showToast(`사용자 [${uid}] 계정이 삭제(차단)되었습니다.`);
         }
@@ -669,7 +730,7 @@
             if (dashArchiveCount) dashArchiveCount.innerText = `${archiveList.length}개 항목`;
         }
 
-        function handleMultiplePhotos(event) {
+        window.handleMultiplePhotos = function(event) {
             const files = event.target.files;
             if (!files || files.length === 0) return;
 
@@ -764,12 +825,12 @@
             `).join('');
         }
 
-        function selectPhotoIndex(idx) {
+        window.selectPhotoIndex = function(idx) {
             activeSelectedIndex = idx;
             renderUploadThumbnails();
         }
 
-        function removePhoto(idx) {
+        window.removePhoto = function(idx) {
             activePhotoList.splice(idx, 1);
             if (activeSelectedIndex >= activePhotoList.length) activeSelectedIndex = Math.max(0, activePhotoList.length - 1);
             renderUploadThumbnails();
@@ -778,7 +839,7 @@
             showToast("사진이 삭제되었습니다.");
         }
 
-        function clearAllPhotos() {
+        window.clearAllPhotos = function() {
             activePhotoList = [];
             activeSelectedIndex = 0;
             renderUploadThumbnails();
@@ -787,14 +848,14 @@
             showToast("모든 사진이 초기화되었습니다.");
         }
 
-        function updateActivePhotoDesc(val) {
+        window.updateActivePhotoDesc = function(val) {
             if (activePhotoList.length > 0 && activePhotoList[activeSelectedIndex]) {
                 activePhotoList[activeSelectedIndex].text = val;
                 regenerateBandText();
             }
         }
 
-        function resetActivePhotoDesc() {
+        window.resetActivePhotoDesc = function() {
             if (activePhotoList.length > 0 && activePhotoList[activeSelectedIndex]) {
                 activePhotoList[activeSelectedIndex].text = "현장 작업 사진 첨부";
                 renderUploadThumbnails();
@@ -802,7 +863,7 @@
             }
         }
 
-        function applyPreset(descText) {
+        window.applyPreset = function(descText) {
             if (activePhotoList.length === 0) {
                 showToast("먼저 사진을 등록하고 선택해 주세요.");
                 return;
@@ -813,7 +874,7 @@
             showToast(`사진 ${activeSelectedIndex + 1}번에 문구가 적용되었습니다.`);
         }
 
-        function regenerateBandText() {
+        window.regenerateBandText = function() {
             const today = new Date().toISOString().split('T')[0];
             let text = `■ [금일 현장 작업 일보]\n- 현장명: ${currentSite}\n- 일자: ${today}\n`;
             if (activePhotoList.length === 0) {
@@ -828,7 +889,7 @@
             if (textarea) textarea.value = text;
         }
 
-        function savePhotosAndSheetData() {
+        window.savePhotosAndSheetData = async function() {
             if (activePhotoList.length === 0) {
                 showToast("저장할 사진이 없습니다.");
                 return;
@@ -838,23 +899,34 @@
             const syncSheet = document.getElementById('syncSheet').checked;
             const syncArchive = document.getElementById('syncArchive').checked;
 
+            if (!currentUser || !db) {
+                showToast("로그인 정보가 없거나 DB 연결 오류입니다.");
+                return;
+            }
+
             try {
+                const targetUid = currentUser.userId;
+
                 if (syncSheet) {
                     sheetPhotoList = [...activePhotoList];
-                    localStorage.setItem('smart_construction_sheet', JSON.stringify(sheetPhotoList));
+                    const sheetRef = doc(db, 'artifacts', appId, 'users', targetUid, 'data_store', 'sheet_data');
+                    await setDoc(sheetRef, { items: sheetPhotoList });
                 }
                 if (syncArchive) {
                     activePhotoList.forEach(item => {
                         if (!archiveList.some(a => a.id === item.id)) archiveList.unshift(item);
                     });
-                    localStorage.setItem('smart_construction_archive', JSON.stringify(archiveList));
+                    const archiveRef = doc(db, 'artifacts', appId, 'users', targetUid, 'data_store', 'archive_data');
+                    await setDoc(archiveRef, { items: archiveList });
                 }
-            } catch (err) {}
 
-            updateDashboardCounts();
-            showToast("사진대지 및 보관함에 저장되었습니다!");
-            if (syncSheet) switchTab('tabPrintSheetView');
-            else if (syncArchive) switchTab('tabArchiveView');
+                updateDashboardCounts();
+                showToast("클라우드 서버에 안전하게 동기화 저장되었습니다!");
+                if (syncSheet) switchTab('tabPrintSheetView');
+                else if (syncArchive) switchTab('tabArchiveView');
+            } catch (err) {
+                showToast("클라우드 저장 중 오류가 발생했습니다.");
+            }
         }
 
         function renderPrintSheets() {
@@ -862,7 +934,6 @@
             const controls = document.getElementById('sheetEditControls');
             if (!container) return;
 
-            // Render Edit controls only if Admin Mode is active
             if (controls) {
                 if (isAdminMode) {
                     controls.innerHTML = `
@@ -931,31 +1002,41 @@
             `).join('');
         }
 
-        function editSheetText(idx) {
+        window.editSheetText = async function(idx) {
             if (!isAdminMode) {
                 showToast("관리자 모드에서만 수정할 수 있습니다.");
                 return;
             }
             const currentText = sheetPhotoList[idx].text;
             const newText = prompt("준공사진대지 작업명을 수정하세요:", currentText);
-            if (newText !== null) {
+            if (newText !== null && currentUser && db) {
                 sheetPhotoList[idx].text = newText;
-                try { localStorage.setItem('smart_construction_sheet', JSON.stringify(sheetPhotoList)); } catch(e){}
-                renderPrintSheets();
-                showToast("대지 작업 내용이 수정되었습니다.");
+                try {
+                    const sheetRef = doc(db, 'artifacts', appId, 'users', currentUser.userId, 'data_store', 'sheet_data');
+                    await setDoc(sheetRef, { items: sheetPhotoList });
+                    renderPrintSheets();
+                    showToast("클라우드 대지 작업 내용이 수정되었습니다.");
+                } catch(e) {
+                    showToast("수정 저장 실패");
+                }
             }
         }
 
-        function clearAllSheetPhotos() {
+        window.clearAllSheetPhotos = async function() {
             if (!isAdminMode) {
                 showToast("관리자 권한이 필요합니다.");
                 return;
             }
             sheetPhotoList = [];
-            try { localStorage.removeItem('smart_construction_sheet'); } catch(e){}
-            renderPrintSheets();
-            updateDashboardCounts();
-            showToast("준공사진대지 데이터가 초기화되었습니다.");
+            if (currentUser && db) {
+                try {
+                    const sheetRef = doc(db, 'artifacts', appId, 'users', currentUser.userId, 'data_store', 'sheet_data');
+                    await setDoc(sheetRef, { items: [] });
+                    renderPrintSheets();
+                    updateDashboardCounts();
+                    showToast("클라우드 준공사진대지 데이터가 초기화되었습니다.");
+                } catch(e) {}
+            }
         }
 
         function renderArchiveList() {
@@ -969,7 +1050,7 @@
             if (filterDate) filtered = archiveList.filter(item => item.date === filterDate);
 
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 text-xs bg-slate-50 rounded-xl border">조건에 일치하는 보관함 사진이 없습니다.</div>`;
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 text-xs bg-slate-50 rounded-xl border">클라우드 보관함에 조건에 일치하는 사진이 없습니다.</div>`;
                 return;
             }
 
@@ -992,21 +1073,28 @@
             `).join('');
         }
 
-        function resetArchiveFilter() {
+        window.resetArchiveFilter = function() {
             const dateInput = document.getElementById('archiveFilterDate');
             if (dateInput) dateInput.value = '';
             renderArchiveList();
         }
 
-        function deleteArchiveItem(id) {
+        window.deleteArchiveItem = async function(id) {
             archiveList = archiveList.filter(item => String(item.id) !== String(id));
-            try { localStorage.setItem('smart_construction_archive', JSON.stringify(archiveList)); } catch(e){}
-            renderArchiveList();
-            updateDashboardCounts();
-            showToast("보관함에서 삭제되었습니다.");
+            if (currentUser && db) {
+                try {
+                    const archiveRef = doc(db, 'artifacts', appId, 'users', currentUser.userId, 'data_store', 'archive_data');
+                    await setDoc(archiveRef, { items: archiveList });
+                    renderArchiveList();
+                    updateDashboardCounts();
+                    showToast("클라우드 보관함에서 삭제되었습니다.");
+                } catch(e) {
+                    showToast("삭제 실패");
+                }
+            }
         }
 
-        function downloadUnifiedCard(photoUrl, workText, dateStr) {
+        window.downloadUnifiedCard = function(photoUrl, workText, dateStr) {
             const canvas = document.getElementById('cardCanvas');
             const ctx = canvas.getContext('2d');
             const img = new Image();
@@ -1073,7 +1161,7 @@
             img.src = photoUrl;
         }
 
-        function downloadMultiPhotoPortfolio() {
+        window.downloadMultiPhotoPortfolio = function() {
             const sitePhotos = archiveList.length > 0 ? archiveList : activePhotoList;
             if (sitePhotos.length === 0) {
                 showToast("포트폴리오로 만들 사진이 보관함에 없습니다.");
@@ -1184,7 +1272,7 @@
             }
         }
 
-        function copyBandUnifiedText() {
+        window.copyBandUnifiedTest = function() {
             const textarea = document.getElementById('bandUnifiedText');
             if (!textarea) return;
             textarea.select();
