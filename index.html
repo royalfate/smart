@@ -385,7 +385,7 @@
                 <div class="space-y-1">
                     <span class="bg-amber-500 text-slate-900 px-3 py-1 rounded-full text-xs font-bold inline-block">👑 관리자 모드 활성화됨</span>
                     <h2 class="text-xl sm:text-2xl font-black">현장 시스템 관리자 통제 센터</h2>
-                    <p class="text-xs text-amber-200">여기서 추가하거나 삭제한 계정 및 등록된 사진의 내용·날짜를 수정하면 클라우드를 통해 실시간 반영됩니다.</p>
+                    <p class="text-xs text-amber-200">여기서 추가하거나 삭제한 계정 및 등록된 사진의 내용·날짜를 수정하거나 불필요한 사진(대지/포트폴리오)을 삭제할 수 있습니다.</p>
                 </div>
                 <button onclick="exitAdminMode()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-xl text-xs font-bold border border-amber-500/30 transition">
                     일반 모드로 전환
@@ -395,11 +395,11 @@
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
                 <div class="flex justify-between items-center">
                     <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
-                        <i class="fa-solid fa-images text-amber-600"></i> 등록된 준공대지 및 보관함 사진 개별 수정 (관리자 전용)
+                        <i class="fa-solid fa-images text-amber-600"></i> 등록된 준공대지 및 보관함 사진 개별 수정 및 삭제 (관리자 전용)
                     </h3>
                     <span id="adminPhotoCountBadge" class="text-xs font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">0장 등록됨</span>
                 </div>
-                <p class="text-xs text-slate-500">아래에서 각 사진의 촬영일과 작업 내용을 직접 수정하고 저장하면, 준공대지와 보관함 내용이 동시에 일괄 변경됩니다.</p>
+                <p class="text-xs text-slate-500">아래에서 각 사진의 촬영일과 작업 내용을 수정하거나, 필요 없는 사진을 삭제할 수 있습니다.</p>
                 
                 <div id="adminPhotoEditorList" class="space-y-3 max-h-96 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200 custom-scrollbar">
                     <div class="text-center py-8 text-slate-400 text-xs">등록된 사진이 없습니다.</div>
@@ -1177,7 +1177,7 @@
                         <img src="${item.imageUrl}" class="w-full h-full object-cover">
                     </div>
                     <div class="flex-1 w-full space-y-2">
-                        <div class="flex flex-wrap gap-2 items-center text-xs">
+                        <div class="flex flex-wrap justify-between items-center text-xs">
                             <span class="font-bold text-slate-700">#${idx+1} 사진</span>
                             <div class="flex items-center gap-1">
                                 <label class="text-[11px] text-slate-500 font-bold">촬영일:</label>
@@ -1186,8 +1186,11 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <input type="text" id="adminPhotoDesc_${idx}" value="${item.description || ''}" placeholder="작업 내용을 입력하세요" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                            <button type="button" onclick="saveAdminPhotoEdit(${idx})" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs whitespace-nowrap shadow transition">
+                            <button type="button" onclick="saveAdminPhotoEdit(${idx})" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs whitespace-nowrap shadow transition">
                                 수정저장
+                            </button>
+                            <button type="button" onclick="deleteAdminPhoto(${idx})" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs whitespace-nowrap shadow transition">
+                                삭제
                             </button>
                         </div>
                     </div>
@@ -1208,6 +1211,30 @@
                 archiveList[idx].description = newDesc;
             }
 
+            await savePhotoChangesToCloud();
+            renderPrintSheets();
+            renderArchiveList();
+            renderAdminPhotoEditorList();
+            showToast(`사진 #${idx+1}의 촬영일과 내용이 수정되었습니다.`);
+        };
+
+        window.deleteAdminPhoto = async function(idx) {
+            if (!confirm(`정말로 #${idx+1} 사진을 준공대지와 보관함에서 삭제하시겠습니까?`)) return;
+
+            sheetPhotoList.splice(idx, 1);
+            if (archiveList[idx]) {
+                archiveList.splice(idx, 1);
+            }
+
+            await savePhotoChangesToCloud();
+            updateDashboardCounts();
+            renderPrintSheets();
+            renderArchiveList();
+            renderAdminPhotoEditorList();
+            showToast(`사진 #${idx+1}이 성공적으로 삭제되었습니다.`);
+        };
+
+        async function savePhotoChangesToCloud() {
             if (currentUser) {
                 localStorage.setItem(`smart_construction_sheet_${currentUser.userId}`, JSON.stringify(sheetPhotoList));
                 localStorage.setItem(`smart_construction_archive_${currentUser.userId}`, JSON.stringify(archiveList));
@@ -1223,12 +1250,7 @@
                     } catch(e) {}
                 }
             }
-
-            renderPrintSheets();
-            renderArchiveList();
-            renderAdminPhotoEditorList();
-            showToast(`사진 #${idx+1}의 촬영일과 내용이 준공대지 및 보관함에 즉시 반영되었습니다.`);
-        };
+        }
 
         window.downloadSinglePortfolioImage = async function() {
             if (archiveList.length === 0) {
