@@ -74,7 +74,7 @@
                 <p class="text-[11px] text-slate-500">관리자 비밀번호를 입력해주세요.</p>
             </div>
             <div class="space-y-2">
-                <input type="password" id="adminInputPassword" placeholder="비밀번호 입력 (1773)" class="w-full px-4 py-3 border border-slate-300 rounded-xl text-xs text-center font-bold tracking-widest focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                <input type="password" id="adminInputPassword" placeholder="비밀번호 입력" class="w-full px-4 py-3 border border-slate-300 rounded-xl text-xs text-center font-bold tracking-widest focus:ring-2 focus:ring-amber-500 focus:outline-none">
                 <div class="flex gap-2">
                     <button type="button" onclick="closeAdminPrompt()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">취소</button>
                     <button type="button" onclick="verifyAdminPassword()" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs transition shadow">인증하기</button>
@@ -1022,7 +1022,7 @@
 
                 ctx.fillStyle = "#ffffff";
                 ctx.font = "bold 38px 'Inter', sans-serif";
-                ctx.fillText(`🏗️ ${currentSite}`, 50, 75);
+                ctx.fillText(`${currentSite}`, 50, 75);
 
                 ctx.fillStyle = "#3b82f6";
                 ctx.beginPath();
@@ -1059,7 +1059,7 @@
 
                 ctx.fillStyle = "#0f172a";
                 ctx.font = "bold 30px 'Inter', sans-serif";
-                ctx.fillText("■ 작업 내용:", fX + 30, fY + 45);
+                ctx.fillText("작업 내용:", fX + 30, fY + 45);
                 ctx.fillStyle = "#334155";
                 ctx.font = "28px 'Inter', sans-serif";
                 ctx.fillText(workText, fX + 30, fY + 100, 1040);
@@ -1098,7 +1098,7 @@
 
             ctx.fillStyle = "#ffffff";
             ctx.font = "bold 42px 'Inter', sans-serif";
-            ctx.fillText(`🏗️ ${currentSite} 현장 작업 포트폴리오`, 50, 95);
+            ctx.fillText(`${currentSite} 현장 작업 포트폴리오`, 50, 95);
 
             let loadedCount = 0;
             const images = new Array(sitePhotos.length);
@@ -1154,19 +1154,19 @@
                     }
 
                     const fX = 80, fY = currentY + 650, fW = 1040, fH = 190;
-                    ctx.fillStyle = "#f8fafc";
-                    ctx.beginPath();
-                    ctx.roundRect(fX, fY, fW, fH, 12);
-                    ctx.fill();
+                ctx.fillStyle = "#f8fafc";
+                ctx.beginPath();
+                ctx.roundRect(fX, fY, fW, fH, 12);
+                ctx.fill();
 
-                    ctx.fillStyle = "#0f172a";
-                    ctx.font = "bold 26px 'Inter', sans-serif";
-                    ctx.fillText("■ 작업 내용:", fX + 30, fY + 50);
-                    ctx.fillStyle = "#334155";
-                    ctx.font = "26px 'Inter', sans-serif";
-                    ctx.fillText(item.text, fX + 30, fY + 120, fW - 60);
+                ctx.fillStyle = "#0f172a";
+                ctx.font = "bold 26px 'Inter', sans-serif";
+                ctx.fillText("작업 내용:", fX + 30, fY + 50);
+                ctx.fillStyle = "#334155";
+                ctx.font = "26px 'Inter', sans-serif";
+                ctx.fillText(item.text, fX + 30, fY + 120, fW - 60);
 
-                    currentY += itemHeight;
+                currentY += itemHeight;
                 });
 
                 ctx.fillStyle = "#0f172a";
