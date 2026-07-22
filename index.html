@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트건설관리 - 강릉 NH금융센터 현장일보</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        @media print {
+            body { background: white !important; }
+            header, nav, button, .no-print { display: none !important; }
+            #tabPrintSheetView { display: block !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-hard-hat text-amber-400 text-xl"></i>
+                <h1 class="font-bold text-lg tracking-tight">스마트건설관리 <span class="text-xs text-slate-400 font-normal">| 강릉 NH금융센터 신축공사</span></h1>
+            </div>
+            <!-- Always visible navigation buttons for all tabs -->
+            <nav id="topNavTabs" class="flex flex-wrap gap-2 text-xs font-medium">
+                <button onclick="switchTab('tabDailyView')" id="btnTabDailyView" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white transition flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-camera"></i> 현장 사진 촬영 및 대지
+                </button>
+                <button onclick="switchTab('tabPrintSheetView')" id="btnTabPrintSheetView" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-lines"></i> 준공사진대지
+                </button>
+                <button onclick="switchTab('tabArchiveView')" id="btnTabArchiveView" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-images"></i> 보관함 (밴드공유)
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+
+        <!-- Tab 1: Daily View -->
+        <section id="tabDailyView" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Left: Photo Multi Upload & Selection List -->
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h2 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                                <span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
+                                현장 사진 촬영 및 다중 선택
+                            </h2>
+                            <span id="photoCountBadge" class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">0장 선택됨</span>
+                        </div>
+
+                        <!-- Multi File Input Box supporting both Gallery selection and Camera capture -->
+                        <div class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-50 hover:bg-blue-50/30 transition text-center relative">
+                            <input type="file" id="multiPhotoInput" accept="image/*" multiple onchange="handleMultiplePhotos(event)" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10">
+                            <i class="fa-solid fa-camera-retro text-3xl text-blue-500 mb-2 pointer-events-none"></i>
+                            <span class="font-bold text-xs text-slate-700 pointer-events-none">스마트폰 사진 촬영 / 갤러리 다중 선택</span>
+                            <span class="text-[11px] text-slate-400 mt-1 pointer-events-none">터치하여 현장 사진을 촬영하거나 여러 장을 한 번에 선택하세요</span>
+                        </div>
+
+                        <!-- Thumbnail Grid -->
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center text-xs text-slate-500">
+                                <span class="font-medium"><i class="fa-solid fa-list-check mr-1"></i> 업로드 준비된 사진 목록 (클릭하여 선택)</span>
+                                <button onclick="clearAllPhotos()" class="text-rose-600 hover:underline font-bold text-[11px]">
+                                    <i class="fa-solid fa-trash-can mr-1"></i> 전체 삭제
+                                </button>
+                            </div>
+                            <div id="uploadThumbnailGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-56 overflow-y-auto p-1 bg-slate-50 rounded-xl border border-slate-200 custom-scrollbar">
+                                <div class="col-span-full text-center py-6 text-slate-400 text-xs">
+                                    등록된 사진이 없습니다. 위 영역을 눌러 사진을 추가하세요.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sync Target Checkboxes -->
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+                            <span class="text-[11px] font-bold text-slate-600 block">
+                                <i class="fa-solid fa-link text-blue-600 mr-1"></i> 사진 복수 연동 대상 선택
+                            </span>
+                            <div class="flex flex-wrap gap-4 text-xs font-medium">
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="syncBand" checked class="rounded text-blue-600 focus:ring-blue-500"> 📱 밴드
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="syncSheet" checked class="rounded text-blue-600 focus:ring-blue-500"> 📄 준공대지
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="syncArchive" checked class="rounded text-blue-600 focus:ring-blue-500"> 📁 보관함
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Construction Tree & Active Photo Description Editor -->
+                <div class="lg:col-span-7 space-y-4">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h2 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                                <span class="bg-amber-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
+                                세부 공종 선택 트리 (선택된 사진별 개별 적용)
+                            </h2>
+                            <button onclick="resetActivePhotoDesc()" class="text-xs text-slate-500 hover:text-slate-800 underline">문구 초기화</button>
+                        </div>
+
+                        <!-- Construction Category 1: Site Prep / Temporary -->
+                        <div class="border border-amber-200 bg-amber-50/30 rounded-xl p-3 space-y-2">
+                            <span class="text-xs font-bold text-amber-900 flex items-center gap-1">
+                                <i class="fa-solid fa-triangle-exclamation"></i> 현장준비 / 가설공사
+                            </span>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                <button type="button" onclick="applyPreset('현장 가설 컨테이너 (사무실/창고/휴게실) 반입 및 위치 안착')" class="p-2 bg-white hover:bg-amber-100/60 border border-amber-200 rounded-lg text-left font-medium transition truncate">
+                                    • 가설 컨테이너 반입/안착
+                                </button>
+                                <button type="button" onclick="applyPreset('지적 경계점 확인 및 규범틀/측량 작업 시행')" class="p-2 bg-white hover:bg-amber-100/60 border border-amber-200 rounded-lg text-left font-medium transition truncate">
+                                    • 경계점 확인 및 규범틀 측량
+                                </button>
+                                <button type="button" onclick="applyPreset('현장 부지 지장물 정리 및 부지 평탄화(정지) 작업')" class="p-2 bg-white hover:bg-amber-100/60 border border-amber-200 rounded-lg text-left font-medium transition truncate">
+                                    • 부지 지장물 정리 및 평탄화
+                                </button>
+                                <button type="button" onclick="applyPreset('가설 펜스(EGI/RPP) 및 비산먼지 방지망 설치')" class="p-2 bg-white hover:bg-amber-100/60 border border-amber-200 rounded-lg text-left font-medium transition truncate">
+                                    • 가설 펜스 및 방지망 설치
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Construction Category 2: Civil / Earthwork -->
+                        <div class="border border-blue-200 bg-blue-50/30 rounded-xl p-3 space-y-2">
+                            <span class="text-xs font-bold text-blue-900 flex items-center gap-1">
+                                <i class="fa-solid fa-person-digging"></i> 토목 / 토공사
+                            </span>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                <button type="button" onclick="applyPreset('터파기 및 잔토 상차/반출 작업 시행')" class="p-2 bg-white hover:bg-blue-100/60 border border-blue-200 rounded-lg text-left font-medium transition truncate">
+                                    • 터파기 및 잔토 상차/처리
+                                </button>
+                                <button type="button" onclick="applyPreset('흙막이 토류판 및 CIP 시공 작업')" class="p-2 bg-white hover:bg-blue-100/60 border border-blue-200 rounded-lg text-left font-medium transition truncate">
+                                    • 흙막이 토류판 및 CIP 시공
+                                </button>
+                                <button type="button" onclick="applyPreset('지반 보강(RJB/SGR) 및 그라우팅 시공')" class="p-2 bg-white hover:bg-blue-100/60 border border-blue-200 rounded-lg text-left font-medium transition truncate">
+                                    • 지반 보강 및 그라우팅
+                                </button>
+                                <button type="button" onclick="applyPreset('우·오수 관로 매설 및 맨홀 설치 작업')" class="p-2 bg-white hover:bg-blue-100/60 border border-blue-200 rounded-lg text-left font-medium transition truncate">
+                                    • 우·오수 관로매설 및 맨홀설치
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Construction Category 3: Structural / Concrete -->
+                        <div class="border border-emerald-200 bg-emerald-50/30 rounded-xl p-3 space-y-2">
+                            <span class="text-xs font-bold text-emerald-900 flex items-center gap-1">
+                                <i class="fa-solid fa-building"></i> 골조 / 건축공사
+                            </span>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                <button type="button" onclick="applyPreset('슬래브/기초 철근 배근 및 조립 (HD13, HD19)')" class="p-2 bg-white hover:bg-emerald-100/60 border border-emerald-200 rounded-lg text-left font-medium transition truncate">
+                                    • 슬래브/기초 철근배근
+                                </button>
+                                <button type="button" onclick="applyPreset('벽체/기둥 거푸집 조립 및 수직도 검측')" class="p-2 bg-white hover:bg-emerald-100/60 border border-emerald-200 rounded-lg text-left font-medium transition truncate">
+                                    • 벽체/기둥 거푸집 조립
+                                </button>
+                                <button type="button" onclick="applyPreset('콘크리트 타설 및 진동기 다짐 작업 (25-27-150)')" class="p-2 bg-white hover:bg-emerald-100/60 border border-emerald-200 rounded-lg text-left font-medium transition truncate">
+                                    • 콘크리트 타설 및 다짐
+                                </button>
+                                <button type="button" onclick="applyPreset('콘크리트 양생관리 및 피복두께 점검')" class="p-2 bg-white hover:bg-emerald-100/60 border border-emerald-200 rounded-lg text-left font-medium transition truncate">
+                                    • 양생관리 및 피복두께 점검
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Active Photo Description Input -->
+                        <div class="space-y-1.5 pt-2">
+                            <label id="activePhotoTitleLabel" class="text-xs font-bold text-slate-700 block">
+                                <i class="fa-solid fa-pen-to-square text-blue-600 mr-1"></i>선택된 사진 개별 작업 설명
+                            </label>
+                            <input type="text" id="activePhotoDescInput" oninput="updateActivePhotoDesc(this.value)" placeholder="사진을 선택하고 작업 내용을 입력하세요." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+
+                        <!-- Band Export Integrated Text Box -->
+                        <div class="space-y-1.5 pt-2 border-t">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="font-bold text-slate-700 flex items-center gap-1">
+                                    <i class="fa-solid fa-file-lines text-emerald-600"></i> 밴드 게시글용 통합 문구 (직접 수정/편집 가능)
+                                </span>
+                                <button onclick="regenerateBandText()" class="text-[11px] text-blue-600 hover:underline">
+                                    <i class="fa-solid fa-rotate mr-1"></i>문구 다시 자동 집계
+                                </button>
+                            </div>
+                            <textarea id="bandUnifiedText" rows="4" class="w-full p-3 border border-slate-300 rounded-xl text-xs font-mono bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 custom-scrollbar"></textarea>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                            <button onclick="copyBandUnifiedText()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center gap-2">
+                                <i class="fa-regular fa-copy"></i> 밴드문구 복사
+                            </button>
+                            <button onclick="savePhotosAndSheetData()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-floppy-disk"></i> 사진대지 & 보관함 일괄 저장
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 2: Print Sheet View -->
+        <section id="tabPrintSheetView" class="hidden space-y-6">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-file-lines text-blue-600"></i> 공식 준공 사진대지 (A4 표준 양식)
+                        </h2>
+                        <p class="text-xs text-slate-500">등록된 사진들이 A4 1장당 2구(2장)씩 자동으로 매칭되어 깔끔한 공사사진대지로 출력됩니다.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="clearAllSheetPhotos()" class="px-3 py-2 bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 rounded-xl text-xs font-bold transition">
+                            대지 사진 전체 초기화
+                        </button>
+                        <button onclick="window.print()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-print"></i> A4 전체 다중페이지 인쇄 / PDF 저장
+                        </button>
+                    </div>
+                </div>
+
+                <div id="a4SheetsContainer" class="space-y-8 bg-slate-200 p-4 sm:p-8 rounded-2xl overflow-x-auto flex flex-col items-center">
+                    <div class="text-center py-12 text-slate-500 text-sm">
+                        저장된 사진대지 데이터가 없습니다. 첫 번째 탭에서 사진을 등록하고 저장해 주세요.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 3: Archive View -->
+        <section id="tabArchiveView" class="hidden space-y-6">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-images text-blue-600"></i> 현장 사진 포트폴리오 보관함 (검색 & 밴드 공유용)
+                        </h2>
+                        <p class="text-xs text-slate-500">등록된 사진을 날짜별로 검색하고, 원본 확대 및 밴드 공유용 카드 이미지로 다운로드합니다.</p>
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <input type="date" id="archiveFilterDate" onchange="renderArchiveList()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs">
+                        <button onclick="resetArchiveFilter()" class="px-3 py-1.5 bg-slate-100 text-slate-600 text-xs rounded-lg hover:bg-slate-200">전체보기</button>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div>
+                        <span class="font-bold text-blue-900 text-xs block mb-1">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1 text-blue-600"></i> 밴드 게시용 일체형 포트폴리오 카드 이미지 다운로드
+                        </span>
+                        <p class="text-[11px] text-slate-600">보관함에 있는 모든 사진과 작업 내용을 <strong>세로로 이어붙인 사진-글-사진-글 형식의 단일 포트폴리오 이미지(1장)</strong>로 만들어 밴드에 한 번에 올릴 수 있습니다!</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                        <button onclick="downloadMultiPhotoPortfolio()" class="flex-1 sm:flex-none px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-images"></i> 📸 사진-글-사진-글 1장 포트폴리오 저장
+                        </button>
+                    </div>
+                </div>
+
+                <div id="archiveGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Dynamic Archive Cards -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <canvas id="cardCanvas" class="hidden"></canvas>
+
+    <div id="toastMessage" class="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl text-xs z-50 flex items-center gap-2 transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastText">작업이 완료되었습니다.</span>
+    </div>
+
+    <script>
+        let currentSite = "강릉 NH금융센터 신축공사";
+        let activePhotoList = [];
+        let activeSelectedIndex = 0;
+        let archiveList = [];
+        let sheetPhotoList = [];
+
+        try {
+            const savedArchive = localStorage.getItem('smart_construction_archive');
+            if (savedArchive) archiveList = JSON.parse(savedArchive);
+            const savedSheet = localStorage.getItem('smart_construction_sheet');
+            if (savedSheet) sheetPhotoList = JSON.parse(savedSheet);
+        } catch (e) {
+            console.warn("Storage access restricted:", e);
+        }
+
+        window.onload = function() {
+            if (activePhotoList.length === 0 && sheetPhotoList.length > 0) {
+                activePhotoList = [...sheetPhotoList];
+            }
+            renderUploadThumbnails();
+            renderPrintSheets();
+            renderArchiveList();
+            regenerateBandText();
+        };
+
+        function switchTab(tabId) {
+            document.getElementById('tabDailyView').classList.add('hidden');
+            document.getElementById('tabPrintSheetView').classList.add('hidden');
+            document.getElementById('tabArchiveView').classList.add('hidden');
+
+            document.getElementById('btnTabDailyView').className = "px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5";
+            document.getElementById('btnTabPrintSheetView').className = "px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5";
+            document.getElementById('btnTabArchiveView').className = "px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5";
+
+            document.getElementById(tabId).classList.remove('hidden');
+            if (tabId === 'tabDailyView') {
+                document.getElementById('btnTabDailyView').className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white transition flex items-center gap-1.5 shadow";
+                renderUploadThumbnails();
+            } else if (tabId === 'tabPrintSheetView') {
+                document.getElementById('btnTabPrintSheetView').className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white transition flex items-center gap-1.5 shadow";
+                renderPrintSheets();
+            } else if (tabId === 'tabArchiveView') {
+                document.getElementById('btnTabArchiveView').className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white transition flex items-center gap-1.5 shadow";
+                renderArchiveList();
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function handleMultiplePhotos(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            const today = new Date().toISOString().split('T')[0];
+            let processedCount = 0;
+            const newItems = [];
+            const fileList = Array.from(files);
+
+            fileList.forEach((file) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        try {
+                            const canvas = document.createElement('canvas');
+                            let width = img.width;
+                            let height = img.height;
+                            const MAX_WIDTH = 1200;
+                            const MAX_HEIGHT = 1200;
+
+                            if (width > height) {
+                                if (width > MAX_WIDTH) {
+                                    height *= MAX_WIDTH / width;
+                                    width = MAX_WIDTH;
+                                }
+                            } else {
+                                if (height > MAX_HEIGHT) {
+                                    width *= MAX_HEIGHT / height;
+                                    height = MAX_HEIGHT;
+                                }
+                            }
+
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+
+                            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                            newItems.push({
+                                id: Date.now() + Math.random(),
+                                photo: compressedDataUrl,
+                                text: "현장 작업 사진 첨부",
+                                date: today
+                            });
+                        } catch (err) {
+                            newItems.push({
+                                id: Date.now() + Math.random(),
+                                photo: e.target.result,
+                                text: "현장 작업 사진 첨부",
+                                date: today
+                            });
+                        }
+
+                        processedCount++;
+                        if (processedCount === fileList.length) {
+                            finalizePhotoUpload(newItems);
+                        }
+                    };
+                    img.onerror = function() {
+                        newItems.push({
+                            id: Date.now() + Math.random(),
+                            photo: e.target.result,
+                            text: "현장 작업 사진 첨부",
+                            date: today
+                        });
+                        processedCount++;
+                        if (processedCount === fileList.length) {
+                            finalizePhotoUpload(newItems);
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.onerror = function() {
+                    processedCount++;
+                    if (processedCount === fileList.length && newItems.length > 0) {
+                        finalizePhotoUpload(newItems);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+            event.target.value = '';
+        }
+
+        function finalizePhotoUpload(newItems) {
+            if (newItems.length === 0) {
+                showToast("사진을 불러오지 못했습니다.");
+                return;
+            }
+            activePhotoList.push(...newItems);
+            activeSelectedIndex = activePhotoList.length - 1;
+            renderUploadThumbnails();
+            regenerateBandText();
+            showToast(`${newItems.length}장의 사진이 등록되었습니다.`);
+        }
+
+        function renderUploadThumbnails() {
+            const container = document.getElementById('uploadThumbnailGrid');
+            const badge = document.getElementById('photoCountBadge');
+            if (badge) badge.innerText = `${activePhotoList.length}장 선택됨`;
+
+            if (!container) return;
+
+            if (activePhotoList.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-6 text-slate-400 text-xs">
+                        등록된 사진이 없습니다. 위 영역을 눌러 사진을 추가하세요.
+                    </div>
+                `;
+                const titleLabel = document.getElementById('activePhotoTitleLabel');
+                if (titleLabel) titleLabel.innerHTML = `<i class="fa-solid fa-pen-to-square text-blue-600 mr-1"></i>선택된 사진 개별 작업 설명`;
+                const descInput = document.getElementById('activePhotoDescInput');
+                if (descInput) descInput.value = '';
+                return;
+            }
+
+            if (activeSelectedIndex >= activePhotoList.length) {
+                activeSelectedIndex = activePhotoList.length - 1;
+            }
+
+            const activeItem = activePhotoList[activeSelectedIndex];
+            const titleLabel = document.getElementById('activePhotoTitleLabel');
+            if (titleLabel) titleLabel.innerHTML = `<i class="fa-solid fa-pen-to-square text-blue-600 mr-1"></i>사진 ${activeSelectedIndex + 1}번 개별 작업 설명`;
+            const descInput = document.getElementById('activePhotoDescInput');
+            if (descInput) descInput.value = activeItem ? activeItem.text : '';
+
+            container.innerHTML = activePhotoList.map((item, idx) => `
+                <div onclick="selectPhotoIndex(${idx})" class="relative group aspect-square rounded-xl overflow-hidden border-2 cursor-pointer transition select-none ${activeSelectedIndex === idx ? 'border-blue-600 ring-4 ring-blue-300 shadow-md bg-blue-50' : 'border-slate-200 hover:border-slate-400 bg-white'}">
+                    <img src="${item.photo}" class="w-full h-full object-cover pointer-events-none">
+                    <div class="absolute top-1 left-1 bg-slate-900/80 text-white text-[10px] px-1.5 py-0.5 rounded font-bold pointer-events-none">
+                        ${idx + 1}번
+                    </div>
+                    <button type="button" onclick="event.stopPropagation(); removePhoto(${idx})" class="absolute top-1 right-1 bg-rose-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition shadow">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function selectPhotoIndex(idx) {
+            activeSelectedIndex = idx;
+            renderUploadThumbnails();
+        }
+
+        function removePhoto(idx) {
+            activePhotoList.splice(idx, 1);
+            if (activeSelectedIndex >= activePhotoList.length) {
+                activeSelectedIndex = Math.max(0, activePhotoList.length - 1);
+            }
+            renderUploadThumbnails();
+            regenerateBandText();
+            showToast("사진이 삭제되었습니다.");
+        }
+
+        function clearAllPhotos() {
+            activePhotoList = [];
+            activeSelectedIndex = 0;
+            renderUploadThumbnails();
+            regenerateBandText();
+            showToast("모든 사진이 초기화되었습니다.");
+        }
+
+        function updateActivePhotoDesc(val) {
+            if (activePhotoList.length > 0 && activePhotoList[activeSelectedIndex]) {
+                activePhotoList[activeSelectedIndex].text = val;
+                regenerateBandText();
+            }
+        }
+
+        function resetActivePhotoDesc() {
+            if (activePhotoList.length > 0 && activePhotoList[activeSelectedIndex]) {
+                activePhotoList[activeSelectedIndex].text = "현장 작업 사진 첨부";
+                renderUploadThumbnails();
+                regenerateBandText();
+            }
+        }
+
+        function applyPreset(descText) {
+            if (activePhotoList.length === 0) {
+                showToast("먼저 사진을 등록하고 선택해 주세요.");
+                return;
+            }
+            activePhotoList[activeSelectedIndex].text = descText;
+            renderUploadThumbnails();
+            regenerateBandText();
+            showToast(`사진 ${activeSelectedIndex + 1}번에 문구가 적용되었습니다.`);
+        }
+
+        function regenerateBandText() {
+            const today = new Date().toISOString().split('T')[0];
+            let text = `■ [금일 현장 작업 일보]\n- 현장명: ${currentSite}\n- 일자: ${today}\n`;
+            
+            if (activePhotoList.length === 0) {
+                text += `\n(등록된 현장 사진이 없습니다)`;
+            } else {
+                activePhotoList.forEach((item, idx) => {
+                    text += `\n────────────────\n[사진 ${idx + 1}]\n- 작업내용: ${item.text}\n- 촬영일자: ${item.date}`;
+                });
+                text += `\n────────────────`;
+            }
+            const textarea = document.getElementById('bandUnifiedText');
+            if (textarea) textarea.value = text;
+        }
+
+        function savePhotosAndSheetData() {
+            if (activePhotoList.length === 0) {
+                showToast("저장할 사진이 없습니다.");
+                return;
+            }
+
+            const syncBand = document.getElementById('syncBand').checked;
+            const syncSheet = document.getElementById('syncSheet').checked;
+            const syncArchive = document.getElementById('syncArchive').checked;
+
+            try {
+                if (syncSheet) {
+                    sheetPhotoList = [...activePhotoList];
+                    localStorage.setItem('smart_construction_sheet', JSON.stringify(sheetPhotoList));
+                }
+                if (syncArchive) {
+                    activePhotoList.forEach(item => {
+                        if (!archiveList.some(a => a.id === item.id)) {
+                            archiveList.unshift(item);
+                        }
+                    });
+                    localStorage.setItem('smart_construction_archive', JSON.stringify(archiveList));
+                }
+            } catch (err) {
+                console.warn("Save warning:", err);
+            }
+
+            showToast("사진대지 및 보관함에 저장되었습니다!");
+            if (syncSheet) {
+                switchTab('tabPrintSheetView');
+            } else if (syncArchive) {
+                switchTab('tabArchiveView');
+            }
+        }
+
+        function renderPrintSheets() {
+            const container = document.getElementById('a4SheetsContainer');
+            if (!container) return;
+
+            if (!sheetPhotoList || sheetPhotoList.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-slate-500 text-sm bg-white p-8 rounded-2xl shadow w-full max-w-3xl">
+                        출력할 준공사진대지 데이터가 없습니다. 사진 등록 후 저장해 주세요.
+                    </div>
+                `;
+                return;
+            }
+
+            const pages = [];
+            for (let i = 0; i < sheetPhotoList.length; i += 2) {
+                pages.push(sheetPhotoList.slice(i, i + 2));
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+
+            container.innerHTML = pages.map((pagePhotos, pageIdx) => `
+                <div class="bg-white w-full max-w-[210mm] min-h-[297mm] p-[15mm] shadow-2xl rounded-sm flex flex-col justify-between mb-8 border border-slate-300 relative">
+                    <div>
+                        <div class="text-center space-y-2 pb-6 border-b-2 border-slate-900">
+                            <h2 class="text-2xl font-black tracking-widest text-slate-900 underline underline-offset-8">공 사 사 진 대 지</h2>
+                            <div class="flex justify-between items-center text-xs font-bold text-slate-700 pt-2 px-1">
+                                <span>공사명: ${currentSite}</span>
+                                <span>일자: ${today}</span>
+                                <span>페이지: ${pageIdx + 1} / ${pages.length}</span>
+                            </div>
+                        </div>
+
+                        <div class="py-6 space-y-8">
+                            ${pagePhotos.map((item) => `
+                                <div class="border-2 border-slate-900 rounded-sm overflow-hidden bg-white">
+                                    <div class="w-full h-[100mm] bg-slate-100 flex items-center justify-center border-b-2 border-slate-900 overflow-hidden">
+                                        <img src="${item.photo}" class="w-full h-full object-contain">
+                                    </div>
+                                    <table class="w-full border-collapse text-xs">
+                                        <tr>
+                                            <td class="w-24 bg-slate-100 border-r-2 border-slate-900 p-2 text-center font-bold text-slate-800">작 업 명</td>
+                                            <td class="p-3 font-medium text-slate-900 bg-white">${item.text}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="text-center text-[11px] text-slate-400 pt-4 border-t border-slate-200">
+                        스마트건설관리시스템 - ${currentSite}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function clearAllSheetPhotos() {
+            sheetPhotoList = [];
+            try { localStorage.removeItem('smart_construction_sheet'); } catch(e){}
+            renderPrintSheets();
+            showToast("준공사진대지 데이터가 초기화되었습니다.");
+        }
+
+        function renderArchiveList() {
+            const container = document.getElementById('archiveGrid');
+            const dateInput = document.getElementById('archiveFilterDate');
+            const filterDate = dateInput ? dateInput.value : '';
+
+            if (!container) return;
+
+            let filtered = archiveList;
+            if (filterDate) {
+                filtered = archiveList.filter(item => item.date === filterDate);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12 text-slate-400 text-xs bg-slate-50 rounded-xl border">
+                        조건에 일치하는 보관함 사진이 없습니다.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map((item) => `
+                <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition space-y-3 p-4 flex flex-col justify-between">
+                    <div class="w-full h-52 bg-slate-100 rounded-xl overflow-hidden border relative group">
+                        <img src="${item.photo}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center text-[11px] text-slate-400 font-medium">
+                            <span><i class="fa-regular fa-calendar mr-1"></i>${item.date}</span>
+                            <button onclick="deleteArchiveItem('${item.id}')" class="text-rose-600 hover:underline font-bold">삭제</button>
+                        </div>
+                        <p class="text-xs font-bold text-slate-800 bg-slate-50 p-2.5 rounded-xl border border-slate-100">${item.text}</p>
+                        <button onclick="downloadUnifiedCard('${item.photo}', '${item.text.replace(/'/g, "\\'")}', '${item.date}')" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-image"></i> 단건 카드 이미지 저장
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function resetArchiveFilter() {
+            const dateInput = document.getElementById('archiveFilterDate');
+            if (dateInput) dateInput.value = '';
+            renderArchiveList();
+        }
+
+        function deleteArchiveItem(id) {
+            archiveList = archiveList.filter(item => String(item.id) !== String(id));
+            try { localStorage.setItem('smart_construction_archive', JSON.stringify(archiveList)); } catch(e){}
+            renderArchiveList();
+            showToast("보관함에서 삭제되었습니다.");
+        }
+
+        function downloadUnifiedCard(photoUrl, workText, dateStr) {
+            const canvas = document.getElementById('cardCanvas');
+            const ctx = canvas.getContext('2d');
+
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = function() {
+                canvas.width = 1200;
+                canvas.height = 1100;
+
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = "#0f172a";
+                ctx.fillRect(0, 0, canvas.width, 120);
+
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 38px 'Inter', sans-serif";
+                ctx.fillText(`🏗️ ${currentSite}`, 50, 75);
+
+                ctx.fillStyle = "#3b82f6";
+                ctx.beginPath();
+                ctx.roundRect(canvas.width - 340, 35, 290, 50, 10);
+                ctx.fill();
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 24px 'Inter', sans-serif";
+                ctx.fillText(`📅 촬영일: ${dateStr}`, canvas.width - 325, 68);
+
+                const pX = 50, pY = 160, pW = 1100, pH = 720;
+                ctx.fillStyle = "#f1f5f9";
+                ctx.beginPath();
+                ctx.roundRect(pX, pY, pW, pH, 16);
+                ctx.fill();
+                
+                ctx.save();
+                ctx.beginPath();
+                ctx.roundRect(pX, pY, pW, pH, 16);
+                ctx.clip();
+
+                const imgAspect = img.width / img.height;
+                const boxAspect = pW / pH;
+                let drawW = pW, drawH = pH, drawX = pX, drawY = pY;
+
+                if (imgAspect > boxAspect) {
+                    drawH = pW / imgAspect;
+                    drawY = pY + (pH - drawH) / 2;
+                } else {
+                    drawW = pH * imgAspect;
+                    drawX = pX + (pW - drawW) / 2;
+                }
+                ctx.drawImage(img, drawX, drawY, drawW, drawH);
+                ctx.restore();
+
+                ctx.strokeStyle = "#cbd5e1";
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.roundRect(pX, pY, pW, pH, 16);
+                ctx.stroke();
+
+                const fX = 50, fY = 910, fW = 1100, fH = 150;
+                ctx.fillStyle = "#f8fafc";
+                ctx.beginPath();
+                ctx.roundRect(fX, fY, fW, fH, 16);
+                ctx.fill();
+                ctx.strokeStyle = "#e2e8f0";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.roundRect(fX, fY, fW, fH, 16);
+                ctx.stroke();
+
+                ctx.fillStyle = "#0f172a";
+                ctx.font = "bold 30px 'Inter', sans-serif";
+                ctx.fillText("■ 작업 내용:", fX + 30, fY + 45);
+
+                ctx.fillStyle = "#334155";
+                ctx.font = "28px 'Inter', sans-serif";
+                const maxTextWidth = 1040;
+                ctx.fillText(workText, fX + 30, fY + 100, maxTextWidth);
+
+                const link = document.createElement('a');
+                link.download = `${currentSite}_작업카드_${dateStr}.png`;
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+                showToast("합성 카드 이미지가 저장되었습니다!");
+            };
+            
+            img.onerror = function() {
+                showToast("이미지를 불러오는 중 오류가 발생했습니다.");
+            };
+
+            img.src = photoUrl;
+        }
+
+        // Robust multi-photo portfolio generator producing a single vertical image (Photo -> Description -> Photo -> Description...)
+        function downloadMultiPhotoPortfolio() {
+            const sitePhotos = archiveList.length > 0 ? archiveList : activePhotoList;
+            if (sitePhotos.length === 0) {
+                showToast("포트폴리오로 만들 사진이 보관함에 없습니다.");
+                return;
+            }
+
+            showToast("사진-글-사진-글 형식의 1장 포트폴리오 생성 중...");
+
+            const canvas = document.getElementById('cardCanvas');
+            const ctx = canvas.getContext('2d');
+            const today = new Date().toISOString().split('T')[0];
+
+            const headerHeight = 160;
+            const itemHeight = 940; // Photo block (720) + Text block (180) + Margin (40)
+            const footerHeight = 100;
+            const totalHeight = headerHeight + (sitePhotos.length * itemHeight) + footerHeight;
+
+            canvas.width = 1200;
+            canvas.height = totalHeight;
+
+            // Background
+            ctx.fillStyle = "#f8fafc";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Header Banner
+            ctx.fillStyle = "#0f172a";
+            ctx.fillRect(0, 0, canvas.width, headerHeight);
+
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 42px 'Inter', sans-serif";
+            ctx.fillText(`🏗️ ${currentSite} 현장 작업 포트폴리오`, 50, 95);
+
+            ctx.fillStyle = "#3b82f6";
+            ctx.beginPath();
+            ctx.roundRect(canvas.width - 360, 50, 310, 60, 12);
+            ctx.fill();
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 26px 'Inter', sans-serif";
+            ctx.fillText(`📅 일자: ${today}`, canvas.width - 340, 88);
+
+            let loadedCount = 0;
+            const images = new Array(sitePhotos.length);
+
+            sitePhotos.forEach((item, index) => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.onload = function() {
+                    images[index] = img;
+                    loadedCount++;
+                    if (loadedCount === sitePhotos.length) {
+                        drawPortfolioCanvas();
+                    }
+                };
+                img.onerror = function() {
+                    loadedCount++;
+                    if (loadedCount === sitePhotos.length) {
+                        drawPortfolioCanvas();
+                    }
+                };
+                img.src = item.photo;
+            });
+
+            function drawPortfolioCanvas() {
+                let currentY = headerHeight + 40;
+
+                sitePhotos.forEach((item, index) => {
+                    const img = images[index];
+
+                    // Card Container Box
+                    ctx.fillStyle = "#ffffff";
+                    ctx.beginPath();
+                    ctx.roundRect(50, currentY, 1100, 880, 16);
+                    ctx.fill();
+                    ctx.strokeStyle = "#cbd5e1";
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.roundRect(50, currentY, 1100, 880, 16);
+                    ctx.stroke();
+
+                    // Photo Badge & Date
+                    ctx.fillStyle = "#0f172a";
+                    ctx.beginPath();
+                    ctx.roundRect(80, currentY + 30, 100, 45, 8);
+                    ctx.fill();
+                    ctx.fillStyle = "#ffffff";
+                    ctx.font = "bold 22px 'Inter', sans-serif";
+                    ctx.fillText(`[사진 ${index + 1}]`, 92, currentY + 60);
+
+                    ctx.fillStyle = "#64748b";
+                    ctx.font = "20px 'Inter', sans-serif";
+                    ctx.fillText(`촬영일: ${item.date}`, 200, currentY + 60);
+
+                    // Photo Area (Photo-first layout)
+                    const pX = 80, pY = currentY + 90, pW = 1040, pH = 540;
+                    ctx.fillStyle = "#f1f5f9";
+                    ctx.beginPath();
+                    ctx.roundRect(pX, pY, pW, pH, 12);
+                    ctx.fill();
+
+                    if (img) {
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.roundRect(pX, pY, pW, pH, 12);
+                        ctx.clip();
+
+                        const imgAspect = img.width / img.height;
+                        const boxAspect = pW / pH;
+                        let drawW = pW, drawH = pH, drawX = pX, drawY = pY;
+
+                        if (imgAspect > boxAspect) {
+                            drawH = pW / imgAspect;
+                            drawY = pY + (pH - drawH) / 2;
+                        } else {
+                            drawW = pH * imgAspect;
+                            drawX = pX + (pW - drawW) / 2;
+                        }
+                        ctx.drawImage(img, drawX, drawY, drawW, drawH);
+                        ctx.restore();
+                    }
+
+                    // Description Area (Immediately follows each photo: Photo -> Description)
+                    const fX = 80, fY = currentY + 650, fW = 1040, fH = 190;
+                    ctx.fillStyle = "#f8fafc";
+                    ctx.beginPath();
+                    ctx.roundRect(fX, fY, fW, fH, 12);
+                    ctx.fill();
+                    ctx.strokeStyle = "#e2e8f0";
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.roundRect(fX, fY, fW, fH, 12);
+                    ctx.stroke();
+
+                    ctx.fillStyle = "#0f172a";
+                    ctx.font = "bold 26px 'Inter', sans-serif";
+                    ctx.fillText("■ 작업 내용:", fX + 30, fY + 50);
+
+                    ctx.fillStyle = "#334155";
+                    ctx.font = "26px 'Inter', sans-serif";
+                    ctx.fillText(item.text, fX + 30, fY + 120, fW - 60);
+
+                    currentY += itemHeight;
+                });
+
+                // Footer
+                ctx.fillStyle = "#0f172a";
+                ctx.fillRect(0, canvas.height - footerHeight, canvas.width, footerHeight);
+                ctx.fillStyle = "#94a3b8";
+                ctx.font = "22px 'Inter', sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(`스마트건설관리시스템 - ${currentSite} (총 ${sitePhotos.length}장 수록)`, canvas.width / 2, canvas.height - 35);
+                ctx.textAlign = "left";
+
+                // Trigger Download
+                const link = document.createElement('a');
+                link.download = `${currentSite}_포트폴리오사진글형식_${today}.png`;
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+                showToast("1장짜리 포트폴리오 이미지 저장 완료!");
+            }
+        }
+
+        function copyBandUnifiedText() {
+            const textarea = document.getElementById('bandUnifiedText');
+            if (!textarea) return;
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast("밴드 통합 문구가 복사되었습니다!");
+            } catch (e) {
+                showToast("복사 실패. 텍스트를 직접 복사해 주세요.");
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toastMessage');
+            const toastText = document.getElementById('toastText');
+            if (!toast || !toastText) return;
+            toastText.innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
