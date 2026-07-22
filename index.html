@@ -72,6 +72,7 @@
         </div>
     </div>
 
+    <!-- Admin Prompt Modal -->
     <div id="adminPromptModal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 space-y-4">
             <div class="text-center space-y-1">
@@ -129,7 +130,6 @@
     </header>
 
     <main id="mainContentArea" class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6 hidden">
-
         <!-- Tab 0: Home / Main Dashboard -->
         <section id="tabHomeView" class="space-y-6">
             <div class="bg-gradient-to-br from-blue-900 to-slate-900 text-white p-6 sm:p-10 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
@@ -315,7 +315,7 @@
                                 <i class="fa-regular fa-copy"></i> 밴드문구 복사
                             </button>
                             <button onclick="savePhotosAndSheetData()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-cloud-arrow-up"></i> 클라우드 보관함 & 대지 저장
+                                <i class="fa-solid fa-cloud-arrow-up"></i> 클라우드 보관함 & 대지 자동동기화
                             </button>
                         </div>
                     </div>
@@ -417,7 +417,6 @@
                 </div>
             </div>
         </section>
-
     </main>
 
     <canvas id="cardCanvas" class="hidden"></canvas>
@@ -450,11 +449,11 @@
             const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "demo", projectId: "demo" };
             appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-
             try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
@@ -462,6 +461,7 @@
                 }
                 userId = auth.currentUser ? auth.currentUser.uid : crypto.randomUUID();
             } catch (e) {
+                console.warn("Firebase initialization fallback active:", e);
                 userId = crypto.randomUUID();
             }
 
@@ -481,28 +481,34 @@
         };
 
         async function loadRegisteredUsersFromCloud() {
-            if (!db) return;
-            try {
-                const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'system_users_db');
-                const snap = await getDoc(userRef);
-                if (snap.exists()) {
-                    registeredUsers = snap.data().users || [];
-                } else {
-                    registeredUsers = [
-                        { userId: 'admin', name: '현장총괄 관리자', password: 'admin' },
-                        { userId: 'manager1', name: '김소장 (골조팀)', password: '123' }
-                    ];
-                    await setDoc(userRef, { users: registeredUsers });
+            let loaded = false;
+            if (db) {
+                try {
+                    const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'system_users_db');
+                    const snap = await getDoc(userRef);
+                    if (snap.exists()) {
+                        registeredUsers = snap.data().users || [];
+                        loaded = true;
+                    }
+                } catch(e) {}
+            }
+            if (!loaded) {
+                const localUsers = localStorage.getItem('smart_construction_users_local');
+                if (localUsers) {
+                    try { registeredUsers = JSON.parse(localUsers); } catch(e) {}
                 }
-            } catch(e) {
+            }
+            if (!registeredUsers || registeredUsers.length === 0) {
                 registeredUsers = [
                     { userId: 'admin', name: '현장총괄 관리자', password: 'admin' },
                     { userId: 'manager1', name: '김소장 (골조팀)', password: '123' }
                 ];
+                saveRegisteredUsersToCloud();
             }
         }
 
         async function saveRegisteredUsersToCloud() {
+            localStorage.setItem('smart_construction_users_local', JSON.stringify(registeredUsers));
             if (!db) return;
             try {
                 const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'system_users_db');
@@ -518,17 +524,17 @@
             const submitBtn = document.getElementById('authSubmitBtn');
 
             if (mode === 'login') {
-                btnLogin.className = "flex-1 py-2.5 rounded-lg bg-white shadow text-blue-600 transition";
-                btnRegister.className = "flex-1 py-2.5 rounded-lg text-slate-500 transition";
-                regFields.classList.add('hidden');
-                submitBtn.innerText = "로그인하기";
+                if (btnLogin) btnLogin.className = "flex-1 py-2.5 rounded-lg bg-white shadow text-blue-600 transition";
+                if (btnRegister) btnRegister.className = "flex-1 py-2.5 rounded-lg text-slate-500 transition";
+                if (regFields) regFields.classList.add('hidden');
+                if (submitBtn) submitBtn.innerText = "로그인하기";
             } else {
-                btnLogin.className = "flex-1 py-2.5 rounded-lg text-slate-500 transition";
-                btnRegister.className = "flex-1 py-2.5 rounded-lg bg-white shadow text-blue-600 transition";
-                regFields.classList.remove('hidden');
-                submitBtn.innerText = "회원가입 완료하기";
+                if (btnLogin) btnLogin.className = "flex-1 py-2.5 rounded-lg text-slate-500 transition";
+                if (btnRegister) btnRegister.className = "flex-1 py-2.5 rounded-lg bg-white shadow text-blue-600 transition";
+                if (regFields) regFields.classList.remove('hidden');
+                if (submitBtn) submitBtn.innerText = "회원가입 완료하기";
             }
-        }
+        };
 
         window.handleAuthSubmit = async function() {
             const uidInput = document.getElementById('authUserId').value.trim();
@@ -570,7 +576,7 @@
                 showToast(`${currentUser.name}님 클라우드 접속 완료!`);
                 unlockApp(currentUser);
             }
-        }
+        };
 
         function unlockApp(user) {
             document.getElementById('authOverlay').classList.add('hidden');
@@ -584,6 +590,19 @@
         }
 
         function setupCloudSync(targetUid) {
+            // Load local backup first for instant UI response
+            const localArchive = localStorage.getItem(`smart_construction_archive_${targetUid}`);
+            if (localArchive) {
+                try { archiveList = JSON.parse(localArchive); } catch(e) {}
+            }
+            const localSheet = localStorage.getItem(`smart_construction_sheet_${targetUid}`);
+            if (localSheet) {
+                try { sheetPhotoList = JSON.parse(localSheet); } catch(e) {}
+            }
+            updateDashboardCounts();
+            renderArchiveList();
+            renderPrintSheets();
+
             if (!db) return;
 
             if (unsubscribeArchive) unsubscribeArchive();
@@ -593,27 +612,21 @@
             unsubscribeArchive = onSnapshot(archiveRef, (docSnap) => {
                 if (docSnap.exists()) {
                     archiveList = docSnap.data().items || [];
-                } else {
-                    archiveList = [];
+                    localStorage.setItem(`smart_construction_archive_${targetUid}`, JSON.stringify(archiveList));
+                    updateDashboardCounts();
+                    renderArchiveList();
                 }
-                updateDashboardCounts();
-                renderArchiveList();
-            }, (err) => {
-                archiveList = [];
-            });
+            }, (err) => {});
 
             const sheetRef = doc(db, 'artifacts', appId, 'users', targetUid, 'data_store', 'sheet_data');
             unsubscribeSheet = onSnapshot(sheetRef, (docSnap) => {
                 if (docSnap.exists()) {
                     sheetPhotoList = docSnap.data().items || [];
-                } else {
-                    sheetPhotoList = [];
+                    localStorage.setItem(`smart_construction_sheet_${targetUid}`, JSON.stringify(sheetPhotoList));
+                    updateDashboardCounts();
+                    renderPrintSheets();
                 }
-                updateDashboardCounts();
-                renderPrintSheets();
-            }, (err) => {
-                sheetPhotoList = [];
-            });
+            }, (err) => {});
         }
 
         window.lockApp = function() {
@@ -622,7 +635,7 @@
             document.getElementById('authOverlay').classList.remove('hidden');
             document.getElementById('mainHeader').classList.add('hidden');
             document.getElementById('mainContentArea').classList.add('hidden');
-        }
+        };
 
         window.handleLogout = function() {
             localStorage.removeItem('smart_construction_current_user');
@@ -631,17 +644,17 @@
             document.getElementById('btnTabAdminView').classList.add('hidden');
             lockApp();
             showToast("로그아웃 되었습니다.");
-        }
+        };
 
         window.requestAdminMode = function() {
             document.getElementById('adminPromptModal').classList.remove('hidden');
             document.getElementById('adminInputPassword').value = '';
             document.getElementById('adminInputPassword').focus();
-        }
+        };
 
         window.closeAdminPrompt = function() {
             document.getElementById('adminPromptModal').classList.add('hidden');
-        }
+        };
 
         window.verifyAdminPassword = function() {
             const pwd = document.getElementById('adminInputPassword').value.trim();
@@ -649,119 +662,115 @@
                 isAdminMode = true;
                 closeAdminPrompt();
                 document.getElementById('btnTabAdminView').classList.remove('hidden');
-                document.getElementById('adminModeBtn').innerHTML = `<i class="fa-solid fa-crown text-amber-300"></i> ADMIN 활성`;
-                document.getElementById('adminModeBtn').className = "px-3 py-1.5 rounded-lg bg-amber-600 text-white transition text-xs font-bold flex items-center gap-1 shadow";
-                showToast("관리자 모드가 인증되었습니다!");
                 switchTab('tabAdminView');
+                renderAdminUserTable();
+                showToast("👑 관리자 모드가 성공적으로 활성화되었습니다.");
             } else {
-                showToast("관리자 비밀번호가 틀렸습니다. (비밀번호: 1773)");
+                showToast("관리자 비밀번호가 올바르지 않습니다. (기본: 1773)");
             }
-        }
+        };
 
         window.exitAdminMode = function() {
             isAdminMode = false;
             document.getElementById('btnTabAdminView').classList.add('hidden');
-            document.getElementById('adminModeBtn').innerHTML = `<i class="fa-solid fa-lock"></i> ADMIN`;
-            document.getElementById('adminModeBtn').className = "px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-white transition text-xs font-bold flex items-center gap-1";
-            showToast("일반 모드로 전환되었습니다.");
             switchTab('tabHomeView');
-        }
+            showToast("일반 모드로 전환되었습니다.");
+        };
 
         window.switchTab = function(tabId) {
-            document.getElementById('tabHomeView').classList.add('hidden');
-            document.getElementById('tabDailyView').classList.add('hidden');
-            document.getElementById('tabPrintSheetView').classList.add('hidden');
-            document.getElementById('tabArchiveView').classList.add('hidden');
-            document.getElementById('tabAdminView').classList.add('hidden');
+            ['tabHomeView', 'tabDailyView', 'tabPrintSheetView', 'tabArchiveView', 'tabAdminView'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            ['btnTabHomeView', 'btnTabDailyView', 'btnTabPrintSheetView', 'btnTabArchiveView', 'btnTabAdminView'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.className = btn.classList.contains('font-bold') && id === 'btnTabAdminView' ? 
+                    "px-3 py-1.5 rounded-lg bg-amber-600 text-white transition flex items-center gap-1.5 shadow font-bold" :
+                    "px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5";
+            });
 
-            document.getElementById('btnTabHomeView').className = "px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5";
-            document.getElementById('btnTabDailyView').className = "px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5";
-            document.getElementById('btnTabPrintSheetView').className = "px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5";
-            document.getElementById('btnTabArchiveView').className = "px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5";
-            const btnAdmin = document.getElementById('btnTabAdminView');
-            if (btnAdmin && !btnAdmin.classList.contains('hidden')) {
-                btnAdmin.className = "px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5";
+            const targetEl = document.getElementById(tabId);
+            if (targetEl) targetEl.classList.remove('hidden');
+
+            const activeBtnMap = {
+                'tabHomeView': 'btnTabHomeView',
+                'tabDailyView': 'btnTabDailyView',
+                'tabPrintSheetView': 'btnTabPrintSheetView',
+                'tabArchiveView': 'btnTabArchiveView',
+                'tabAdminView': 'btnTabAdminView'
+            };
+            const activeBtn = document.getElementById(activeBtnMap[tabId]);
+            if (activeBtn) {
+                activeBtn.className = tabId === 'tabAdminView' ? 
+                    "px-3 py-1.5 rounded-lg bg-amber-600 text-white transition flex items-center gap-1.5 shadow font-bold" :
+                    "px-3 py-1.5 rounded-lg bg-blue-600 text-white transition flex items-center gap-1.5 shadow";
             }
-
-            document.getElementById(tabId).classList.remove('hidden');
-            if (tabId === 'tabHomeView') {
-                document.getElementById('btnTabHomeView').className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white transition flex items-center gap-1.5 shadow";
-                updateDashboardCounts();
-            } else if (tabId === 'tabDailyView') {
-                document.getElementById('btnTabDailyView').className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white transition flex items-center gap-1.5 shadow";
-                renderUploadThumbnails();
-            } else if (tabId === 'tabPrintSheetView') {
-                document.getElementById('btnTabPrintSheetView').className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white transition flex items-center gap-1.5 shadow";
-                renderPrintSheets();
-            } else if (tabId === 'tabArchiveView') {
-                document.getElementById('btnTabArchiveView').className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white transition flex items-center gap-1.5 shadow";
-                renderArchiveList();
-            } else if (tabId === 'tabAdminView') {
-                if (btnAdmin) btnAdmin.className = "px-3 py-1.5 rounded-lg bg-amber-600 text-white transition flex items-center gap-1.5 shadow font-bold";
-                renderAdminUserTable();
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        async function renderAdminUserTable() {
-            await loadRegisteredUsersFromCloud();
-            const tbody = document.getElementById('adminUserTableBody');
-            const badge = document.getElementById('adminUserCountBadge');
-            if (badge) badge.innerText = `${registeredUsers.length}명 등록됨`;
-            if (!tbody) return;
-
-            tbody.innerHTML = registeredUsers.map(user => `
-                <tr class="border-b hover:bg-slate-50 transition">
-                    <td class="p-3 font-bold text-slate-900">${user.userId}</td>
-                    <td class="p-3 text-slate-700">${user.name}</td>
-                    <td class="p-3"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[10px] font-bold">승인됨</span></td>
-                    <td class="p-3 text-right">
-                        ${user.userId !== 'admin' ? `<button onclick="deleteUser('${user.userId}')" class="px-3 py-1 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg text-[11px] font-bold transition">계정 삭제</button>` : `<span class="text-slate-400 text-[11px]">기본 관리자</span>`}
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        window.deleteUser = async function(targetId) {
-            if (targetId === 'admin') return;
-            registeredUsers = registeredUsers.filter(u => u.userId !== targetId);
-            await saveRegisteredUsersToCloud();
-            renderAdminUserTable();
-            showToast("선택된 사용자 계정이 삭제되었습니다.");
-        }
+        };
 
         window.handleMultiplePhotos = function(event) {
             const files = event.target.files;
             if (!files || files.length === 0) return;
 
-            const todayStr = new Date().toISOString().slice(0, 10);
-
             Array.from(files).forEach((file) => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const newItem = {
-                        id: 'photo_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
-                        url: e.target.result,
-                        date: todayStr,
-                        description: '골조공사 현장 타설 및 품질 관리 시행'
+                    // Compress image via canvas before storing to prevent localStorage QuotaExceededError
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800;
+                        const MAX_HEIGHT = 800;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Compress to JPEG with 0.7 quality
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+                        const newItem = {
+                            id: 'photo_' + Date.now() + '_' + Math.floor(Math.random()*10000),
+                            imageUrl: compressedDataUrl,
+                            date: new Date().toISOString().slice(0, 10),
+                            location: '강릉 NH금융센터 신축공사 현장',
+                            description: '골조 및 철근 배근 검측 확인 작업 시행'
+                        };
+                        activePhotoList.push(newItem);
+                        if (activePhotoList.length === 1) {
+                            activeSelectedIndex = 0;
+                        }
+                        renderThumbnailGrid();
+                        updateBandUnifiedText();
+                        savePhotosAndSheetData(true);
                     };
-                    activePhotoList.push(newItem);
-                    if (activePhotoList.length === 1) {
-                        activeSelectedIndex = 0;
-                    }
-                    renderUploadThumbnails();
-                    regenerateBandText();
+                    img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             });
-        }
+            showToast(`${files.length}장의 사진이 최적화되어 등록되었습니다.`);
+        };
 
-        window.renderUploadThumbnails = function() {
+        function renderThumbnailGrid() {
             const grid = document.getElementById('uploadThumbnailGrid');
             const badge = document.getElementById('photoCountBadge');
             if (badge) badge.innerText = `${activePhotoList.length}장 선택됨`;
-            if (!grid) return;
 
+            if (!grid) return;
             if (activePhotoList.length === 0) {
                 grid.innerHTML = `<div class="col-span-full text-center py-6 text-slate-400 text-xs">등록된 사진이 없습니다. 위 영역을 눌러 사진을 추가하세요.</div>`;
                 const descInput = document.getElementById('activePhotoDescInput');
@@ -769,287 +778,265 @@
                 return;
             }
 
-            grid.innerHTML = activePhotoList.map((item, index) => `
-                <div onclick="selectActivePhoto(${index})" class="relative group aspect-square rounded-xl overflow-hidden border-2 ${activeSelectedIndex === index ? 'border-blue-600 ring-2 ring-blue-300' : 'border-slate-200'} cursor-pointer bg-slate-100">
-                    <img src="${item.url}" class="w-full h-full object-cover">
+            grid.innerHTML = activePhotoList.map((item, idx) => `
+                <div onclick="selectPhotoIndex(${idx})" class="relative group cursor-pointer border-2 rounded-xl overflow-hidden aspect-square bg-slate-100 ${activeSelectedIndex === idx ? 'border-blue-600 ring-2 ring-blue-400' : 'border-slate-200'}">
+                    <img src="${item.imageUrl}" class="w-full h-full object-cover">
                     <div class="absolute inset-x-0 bottom-0 bg-slate-900/70 text-white text-[9px] px-1 py-0.5 truncate text-center">
-                        #${index + 1}
+                        #${idx+1}
                     </div>
-                    <button onclick="event.stopPropagation(); removePhoto(${index})" class="absolute top-1 right-1 w-5 h-5 bg-rose-600 text-white rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition shadow">
+                    <button type="button" onclick="event.stopPropagation(); removeSinglePhoto(${idx})" class="absolute top-1 right-1 bg-rose-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow opacity-0 group-hover:opacity-100 transition">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
             `).join('');
 
-            const descInput = document.getElementById('activePhotoDescInput');
             if (activePhotoList[activeSelectedIndex]) {
+                const descInput = document.getElementById('activePhotoDescInput');
                 if (descInput) descInput.value = activePhotoList[activeSelectedIndex].description;
+                const titleLabel = document.getElementById('activePhotoTitleLabel');
+                if (titleLabel) titleLabel.innerHTML = `<i class="fa-solid fa-pen-to-square text-blue-600 mr-1"></i>선택된 사진 #${activeSelectedIndex+1} 개별 작업 설명`;
             }
         }
 
-        window.selectActivePhoto = function(index) {
-            activeSelectedIndex = index;
-            renderUploadThumbnails();
-        }
+        window.selectPhotoIndex = function(idx) {
+            activeSelectedIndex = idx;
+            renderThumbnailGrid();
+        };
 
-        window.removePhoto = function(index) {
-            activePhotoList.splice(index, 1);
+        window.removeSinglePhoto = function(idx) {
+            activePhotoList.splice(idx, 1);
             if (activeSelectedIndex >= activePhotoList.length) {
                 activeSelectedIndex = Math.max(0, activePhotoList.length - 1);
             }
-            renderUploadThumbnails();
-            regenerateBandText();
-        }
+            renderThumbnailGrid();
+            updateBandUnifiedText();
+            showToast("사진이 삭제되었습니다.");
+        };
 
         window.clearAllPhotos = function() {
             activePhotoList = [];
             activeSelectedIndex = 0;
-            renderUploadThumbnails();
-            regenerateBandText();
+            renderThumbnailGrid();
+            updateBandUnifiedText();
             showToast("모든 사진이 초기화되었습니다.");
-        }
+        };
 
         window.applyPreset = function(text) {
             if (activePhotoList.length === 0) {
-                showToast("먼저 사진을 업로드해 주세요.");
+                showToast("먼저 사진을 등록해 주세요.");
                 return;
             }
             activePhotoList[activeSelectedIndex].description = text;
             const descInput = document.getElementById('activePhotoDescInput');
             if (descInput) descInput.value = text;
-            renderUploadThumbnails();
-            regenerateBandText();
-            showToast("선택된 사진에 작업 내용이 반영되었습니다.");
-        }
+            renderThumbnailGrid();
+            updateBandUnifiedText();
+            showToast(`사진 #${activeSelectedIndex+1}에 작업 내용이 적용되었습니다.`);
+        };
 
         window.updateActivePhotoDesc = function(val) {
-            if (activePhotoList[activeSelectedIndex]) {
+            if (activePhotoList.length > 0 && activePhotoList[activeSelectedIndex]) {
                 activePhotoList[activeSelectedIndex].description = val;
-                regenerateBandText();
+                updateBandUnifiedText();
             }
-        }
+        };
 
         window.resetActivePhotoDesc = function() {
-            if (activePhotoList[activeSelectedIndex]) {
+            if (activePhotoList.length > 0 && activePhotoList[activeSelectedIndex]) {
                 activePhotoList[activeSelectedIndex].description = "";
-                renderUploadThumbnails();
-                regenerateBandText();
+                const descInput = document.getElementById('activePhotoDescInput');
+                if (descInput) descInput.value = "";
+                updateBandUnifiedText();
+                showToast("작업 설명이 초기화되었습니다.");
             }
-        }
+        };
+
+        window.updateBandUnifiedText = function() {
+            let txt = `[강릉 NH금융센터 신축공사 현장일보]\n- 작성일자: ${new Date().toISOString().slice(0, 10)}\n`;
+            activePhotoList.forEach((item, idx) => {
+                txt += `\n[사진 ${idx+1}] ${item.location}\n- 내용: ${item.description || '특이사항 없음'}\n`;
+            });
+            const bandArea = document.getElementById('bandUnifiedText');
+            if (bandArea) bandArea.value = txt;
+        };
 
         window.regenerateBandText = function() {
-            const textarea = document.getElementById('bandUnifiedText');
-            if (!textarea) return;
-
-            if (activePhotoList.length === 0) {
-                textarea.value = `[강릉 NH금융센터 신축공사 현장일보]\n- 등록된 현장 사진이 없습니다.`;
-                return;
-            }
-
-            let text = `[강릉 NH금융센터 신축공사 현장일보]\n`;
-            text += `📅 일자: ${new Date().toISOString().slice(0, 10)}\n`;
-            text += `👷 보고자: ${currentUser ? currentUser.name : '현장대리인'}\n`;
-            text += `────────────────────\n`;
-            activePhotoList.forEach((item, idx) => {
-                text += `[사진 #${idx + 1}] ${item.description}\n`;
-            });
-            textarea.value = text;
-        }
+            updateBandUnifiedText();
+            showToast("밴드 문구가 최신 상태로 재집계되었습니다.");
+        };
 
         window.copyBandUnifiedText = function() {
             const textarea = document.getElementById('bandUnifiedText');
-            if (!textarea || !textarea.value) return;
+            if (!textarea) return;
+            textarea.select();
             document.execCommand('copy');
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(textarea.value);
-            }
-            showToast("밴드 게시용 통합 문구가 클립보드에 복사되었습니다!");
-        }
+            showToast("📋 밴드 게시글용 통합 문구가 클립보드에 복사되었습니다!");
+        };
 
-        window.savePhotosAndSheetData = async function() {
+        window.savePhotosAndSheetData = async function(isSilent = false) {
             if (activePhotoList.length === 0) {
-                showToast("저장할 사진이 없습니다. 최소 1장 이상 등록해주세요.");
+                if (!isSilent) showToast("저장할 사진이 없습니다. 최소 1장 이상 등록해주세요.");
                 return;
             }
 
-            const syncBand = document.getElementById('syncBand')?.checked ?? true;
-            const syncSheet = document.getElementById('syncSheet')?.checked ?? true;
-            const syncArchive = document.getElementById('syncArchive')?.checked ?? true;
+            sheetPhotoList = [...activePhotoList];
+            activePhotoList.forEach(item => {
+                if (!archiveList.some(a => a.id === item.id)) {
+                    archiveList.unshift({ ...item, savedAt: new Date().toLocaleString() });
+                }
+            });
 
-            let updatedSheet = syncSheet ? [...activePhotoList] : [...sheetPhotoList];
-            let updatedArchive = [...archiveList];
-
-            if (syncArchive) {
-                activePhotoList.forEach(item => {
-                    if (!updatedArchive.some(a => a.id === item.id)) {
-                        updatedArchive.unshift({ ...item, savedAt: new Date().toISOString() });
-                    }
-                });
+            if (currentUser) {
+                try {
+                    localStorage.setItem(`smart_construction_sheet_${currentUser.userId}`, JSON.stringify(sheetPhotoList));
+                    localStorage.setItem(`smart_construction_archive_${currentUser.userId}`, JSON.stringify(archiveList));
+                } catch (e) {
+                    console.warn("localStorage quota exceeded. Data kept in memory and cloud DB.", e);
+                    showToast("⚠️ 로컬 저장소 용량 초과: 클라우드 및 메모리 모드로 안전하게 유지됩니다.");
+                }
             }
 
             if (db && currentUser) {
                 try {
-                    const archiveRef = doc(db, 'artifacts', appId, 'users', currentUser.userId, 'data_store', 'archive_data');
-                    await setDoc(archiveRef, { items: updatedArchive }, { merge: true });
-
                     const sheetRef = doc(db, 'artifacts', appId, 'users', currentUser.userId, 'data_store', 'sheet_data');
-                    await setDoc(sheetRef, { items: updatedSheet }, { merge: true });
+                    await setDoc(sheetRef, { items: sheetPhotoList }, { merge: true });
+
+                    const archiveRef = doc(db, 'artifacts', appId, 'users', currentUser.userId, 'data_store', 'archive_data');
+                    await setDoc(archiveRef, { items: archiveList }, { merge: true });
                 } catch(e) {}
             }
 
-            archiveList = updatedArchive;
-            sheetPhotoList = updatedSheet;
-
             updateDashboardCounts();
-            renderArchiveList();
             renderPrintSheets();
+            renderArchiveList();
 
-            showToast("클라우드 보관함 및 준공대지에 성공적으로 동기화되었습니다!");
-            if (syncSheet) {
+            if (!isSilent) {
+                showToast("☁️ 데이터가 안전하게 저장 및 동기화되었습니다!");
                 switchTab('tabPrintSheetView');
-            } else {
-                switchTab('tabArchiveView');
             }
-        }
+        };
 
         function updateDashboardCounts() {
             const pCount = document.getElementById('dashPhotoCount');
             const sCount = document.getElementById('dashSheetCount');
             const aCount = document.getElementById('dashArchiveCount');
-
             if (pCount) pCount.innerText = `${activePhotoList.length}장`;
             if (sCount) sCount.innerText = `${Math.ceil(sheetPhotoList.length / 2)}페이지`;
             if (aCount) aCount.innerText = `${archiveList.length}개 항목`;
         }
 
-        window.renderPrintSheets = function() {
+        function renderPrintSheets() {
             const container = document.getElementById('a4SheetsContainer');
             if (!container) return;
-
-            const targetList = sheetPhotoList.length > 0 ? sheetPhotoList : activePhotoList;
-
-            if (!targetList || targetList.length === 0) {
-                container.innerHTML = `
-                    <div class="print-page bg-white text-slate-800 flex flex-col justify-between">
-                        <div>
-                            <div class="flex justify-between items-center border-b-2 border-slate-900 pb-3 mb-6">
-                                <h1 class="text-xl font-black">강릉 NH금융센터 신축공사 - 준공 사진대지</h1>
-                                <div class="text-xs font-bold text-slate-600">페이지 1 / 1</div>
-                            </div>
-                            <div class="text-center py-32 text-slate-400 text-sm">
-                                등록된 사진대지 내용이 없습니다. '사진촬영' 탭에서 사진을 등록하고 저장해 주세요.
-                            </div>
-                        </div>
-                    </div>
-                `;
+            if (sheetPhotoList.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-slate-500 text-sm">클라우드에 저장된 사진대지 데이터가 없습니다. 첫 번째 탭에서 사진을 등록하고 저장해 주세요.</div>`;
                 return;
             }
 
             let html = '';
-            for (let i = 0; i < targetList.length; i += 2) {
-                const chunk = targetList.slice(i, i + 2);
-                const pageNum = Math.floor(i / 2) + 1;
-                const totalPages = Math.ceil(targetList.length / 2);
+            for (let i = 0; i < sheetPhotoList.length; i += 2) {
+                const p1 = sheetPhotoList[i];
+                const p2 = sheetPhotoList[i+1];
+
+                const formatYM = (dateStr) => {
+                    if (!dateStr) return '26년 07월';
+                    const parts = dateStr.split('-');
+                    if (parts.length >= 2) {
+                        const yy = parts[0].slice(2);
+                        return `${yy}년 ${parts[1]}월`;
+                    }
+                    return dateStr;
+                };
 
                 html += `
-                    <div class="print-page bg-white text-slate-800 flex flex-col justify-between">
-                        <div>
-                            <div class="flex justify-between items-center border-b-2 border-slate-900 pb-3 mb-6">
-                                <div>
-                                    <h1 class="text-lg font-black tracking-tight">강릉 NH금융센터 신축공사</h1>
-                                    <p class="text-[11px] text-slate-500 font-semibold">공식 준공 사진대지 (감리/시공 제출용)</p>
-                                </div>
-                                <div class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg">
-                                    페이지 ${pageNum} / ${totalPages}
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 gap-6">
-                `;
+                    <div class="print-page bg-white shadow-2xl rounded-xl border border-slate-400 p-8 flex flex-col justify-between" style="width: 210mm; min-height: 297mm; font-family: 'Inter', sans-serif;">
+                        <!-- Official Ledger Table Header -->
+                        <table class="w-full border-collapse border-2 border-black text-center mb-4">
+                            <thead>
+                                <tr>
+                                    <th class="border-2 border-black py-3 bg-white text-black text-xl font-black tracking-widest">
+                                        사 진 대 장
+                                    </th>
+                                </tr>
+                            </thead>
+                        </table>
 
-                chunk.forEach((item, idx) => {
-                    const globalIdx = i + idx;
-                    html += `
-                        <div class="border border-slate-300 rounded-2xl p-4 flex flex-col sm:flex-row gap-4 bg-slate-50/50">
-                            <div class="w-full sm:w-1/2 h-64 rounded-xl overflow-hidden bg-slate-200 border border-slate-300 relative shadow-inner">
-                                <img src="${item.url}" class="w-full h-full object-cover">
-                                <div class="absolute top-2 left-2 bg-slate-900/80 text-white text-[10px] font-bold px-2 py-1 rounded">
-                                    사진 #${globalIdx + 1}
-                                </div>
+                        <!-- Photo Slot 1 -->
+                        <div class="border-2 border-black mb-6 flex flex-col">
+                            <div class="w-full bg-white p-3 flex items-center justify-center overflow-hidden" style="height: 360px;">
+                                <img src="${p1.imageUrl}" class="w-full h-full object-cover">
                             </div>
-                            <div class="w-full sm:w-1/2 flex flex-col justify-between space-y-3">
-                                <div class="space-y-2 text-xs">
-                                    <div class="flex justify-between border-b pb-1">
-                                        <span class="font-bold text-slate-500">공종 분류</span>
-                                        <span class="font-bold text-blue-900">골조 및 건축공사</span>
-                                    </div>
-                                    <div class="flex justify-between border-b pb-1">
-                                        <span class="font-bold text-slate-500">세부 위치</span>
-                                        <span class="font-bold text-slate-800">강릉 NH금융센터 신축 현장</span>
-                                    </div>
-                                    <div class="flex justify-between border-b pb-1">
-                                        <span class="font-bold text-slate-500">촬영 일자</span>
-                                        <span class="font-bold text-slate-800">${item.date || '2026-07-22'}</span>
-                                    </div>
-                                    <div class="space-y-1 pt-1">
-                                        <span class="font-bold text-slate-500 block">■ 작업 내용 설명</span>
-                                        <textarea onchange="updateSheetItemDesc(${globalIdx}, this.value)" rows="3" class="w-full p-2.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none custom-scrollbar">${item.description}</textarea>
-                                    </div>
-                                </div>
-                            </div>
+                            <table class="w-full border-t-2 border-black border-collapse text-xs">
+                                <tr>
+                                    <td class="border-r-2 border-black bg-slate-100 py-2.5 px-3 font-bold text-center w-20 text-slate-900">촬영일</td>
+                                    <td class="border-r-2 border-black py-2.5 px-3 text-center font-medium w-36 text-slate-900">${formatYM(p1.date)}</td>
+                                    <td class="border-r-2 border-black bg-slate-100 py-2.5 px-3 font-bold text-center w-20 text-slate-900">내용</td>
+                                    <td class="py-2.5 px-4 font-bold text-left text-slate-900">${p1.description || p1.location}</td>
+                                </tr>
+                            </table>
                         </div>
-                    `;
-                });
 
-                html += `
+                        <!-- Photo Slot 2 (or Empty Placeholder) -->
+                        ${p2 ? `
+                        <div class="border-2 border-black flex flex-col">
+                            <div class="w-full bg-white p-3 flex items-center justify-center overflow-hidden" style="height: 360px;">
+                                <img src="${p2.imageUrl}" class="w-full h-full object-cover">
                             </div>
+                            <table class="w-full border-t-2 border-black border-collapse text-xs">
+                                <tr>
+                                    <td class="border-r-2 border-black bg-slate-100 py-2.5 px-3 font-bold text-center w-20 text-slate-900">촬영일</td>
+                                    <td class="border-r-2 border-black py-2.5 px-3 text-center font-medium w-36 text-slate-900">${formatYM(p2.date)}</td>
+                                    <td class="border-r-2 border-black bg-slate-100 py-2.5 px-3 font-bold text-center w-20 text-slate-900">내용</td>
+                                    <td class="py-2.5 px-4 font-bold text-left text-slate-900">${p2.description || p2.location}</td>
+                                </tr>
+                            </table>
                         </div>
-                        <div class="mt-8 pt-4 border-t-2 border-slate-300 flex justify-between text-xs font-bold text-slate-600">
-                            <div>감리단 확인: (서명 또는 인)</div>
-                            <div>현장대리인 확인: (서명 또는 인)</div>
+                        ` : `
+                        <div class="border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs bg-slate-50/50" style="height: 420px;">
+                            (여백 사진대지)
+                        </div>
+                        `}
+
+                        <div class="pt-2 text-right text-[10px] text-slate-500">
+                            강릉 NH금융센터 스마트건설관리 시스템
                         </div>
                     </div>
                 `;
             }
-
             container.innerHTML = html;
         }
 
-        window.updateSheetItemDesc = function(index, val) {
-            if (sheetPhotoList[index]) {
-                sheetPhotoList[index].description = val;
-            }
-        }
-
-        window.renderArchiveList = function() {
+        function renderArchiveList() {
             const grid = document.getElementById('archiveGrid');
-            const filterDate = document.getElementById('archiveFilterDate')?.value || '';
-            if (!grid) return;
+            const dateInput = document.getElementById('archiveFilterDate');
+            if (!grid || !dateInput) return;
+            const filterDate = dateInput.value;
 
-            let list = archiveList;
+            let filtered = archiveList;
             if (filterDate) {
-                list = list.filter(item => item.date === filterDate);
+                filtered = archiveList.filter(item => item.date === filterDate);
             }
 
-            if (!list || list.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 text-xs bg-slate-50 rounded-2xl border border-dashed">클라우드 보관함에 저장된 사진이 없습니다.</div>`;
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 text-xs">보관함에 저장된 기록이 없습니다.</div>`;
                 return;
             }
 
-            grid.innerHTML = list.map((item, index) => `
-                <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col justify-between">
-                    <div class="h-48 overflow-hidden bg-slate-100 relative">
-                        <img src="${item.url}" class="w-full h-full object-cover">
-                        <span class="absolute top-2 left-2 bg-slate-900/80 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg">
-                            📅 ${item.date}
-                        </span>
+            grid.innerHTML = filtered.map(item => `
+                <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="h-48 bg-slate-100 overflow-hidden relative">
+                            <img src="${item.imageUrl}" class="w-full h-full object-cover">
+                            <span class="absolute top-2 right-2 bg-slate-900/70 text-white text-[10px] px-2 py-0.5 rounded-full">${item.date}</span>
+                        </div>
+                        <div class="p-4 space-y-2">
+                            <h4 class="font-bold text-slate-900 text-xs">${item.location}</h4>
+                            <p class="text-slate-600 text-xs leading-relaxed">${item.description || '설명 없음'}</p>
+                        </div>
                     </div>
-                    <div class="p-4 space-y-2">
-                        <p class="text-xs font-bold text-slate-800 line-clamp-2">${item.description}</p>
-                    </div>
-                    <div class="px-4 pb-4 pt-0 flex justify-between items-center text-[11px] text-slate-400">
-                        <span>ID: ${item.id.slice(-6)}</span>
-                        <button onclick="downloadSingleArchivePhoto('${item.url}', '${item.date}')" class="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg font-bold transition">
-                            다운로드
+                    <div class="p-4 pt-0 flex gap-2">
+                        <button onclick="loadArchiveToDaily('${item.id}')" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                            촬영 탭으로 불러오기
                         </button>
                     </div>
                 </div>
@@ -1060,98 +1047,114 @@
             const dateInput = document.getElementById('archiveFilterDate');
             if (dateInput) dateInput.value = '';
             renderArchiveList();
-        }
+        };
 
-        window.downloadSingleArchivePhoto = function(url, date) {
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `강릉NH금융센터_${date}_현장사진.jpg`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            showToast("사진이 다운로드되었습니다.");
-        }
+        window.loadArchiveToDaily = function(id) {
+            const found = archiveList.find(a => a.id === id);
+            if (found) {
+                if (!activePhotoList.some(p => p.id === found.id)) {
+                    activePhotoList.push({ ...found });
+                }
+                switchTab('tabDailyView');
+                renderThumbnailGrid();
+                updateBandUnifiedText();
+                showToast("보관함 항목을 촬영 탭으로 불러왔습니다.");
+            }
+        };
 
         window.downloadMultiPhotoPortfolio = function() {
-            if (archiveList.length === 0) {
-                showToast("다운로드할 보관함 사진이 없습니다.");
+            if (archiveList.length === 0 && activePhotoList.length === 0) {
+                showToast("다운로드할 사진 데이터가 없습니다.");
                 return;
             }
-            showToast("전체 포트폴리오 카드 이미지를 생성 중입니다...");
-            // Trigger 1-page combined download
+            const list = archiveList.length > 0 ? archiveList : activePhotoList;
             const canvas = document.getElementById('cardCanvas');
+            if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            canvas.width = 1200;
-            canvas.height = 1600;
 
-            ctx.fillStyle = '#ffffff';
+            canvas.width = 1200;
+            canvas.height = 800 + (list.length * 200);
+
+            ctx.fillStyle = "#f8fafc";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.fillStyle = '#1e293b';
-            ctx.font = 'bold 36px Inter, sans-serif';
-            ctx.fillText("강릉 NH금융센터 신축공사 - 현장 포트폴리오", 60, 80);
+            ctx.fillStyle = "#0f172a";
+            ctx.font = "bold 32px Inter, sans-serif";
+            ctx.fillText("강릉 NH금융센터 신축공사 통합 포트폴리오", 50, 70);
 
-            ctx.fillStyle = '#64748b';
-            ctx.font = '20px Inter, sans-serif';
-            ctx.fillText(`발행일자: ${new Date().toISOString().slice(0, 10)} | 총 ${archiveList.length}개 항목`, 60, 120);
+            ctx.fillStyle = "#64748b";
+            ctx.font = "18px Inter, sans-serif";
+            ctx.fillText(`작성일자: ${new Date().toISOString().slice(0, 10)} | 총 ${list.length}건 기록`, 50, 110);
 
-            let loadedCount = 0;
-            const drawLimit = Math.min(archiveList.length, 4);
-            const cols = 2;
-            const cardW = 520;
-            const cardH = 600;
-            const startX = 60;
-            const startY = 160;
+            let startY = 160;
+            list.slice(0, 5).forEach((item, idx) => {
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(50, startY, 1100, 160);
+                ctx.strokeStyle = "#cbd5e1";
+                ctx.strokeRect(50, startY, 1100, 160);
 
-            for (let i = 0; i < drawLimit; i++) {
-                const item = archiveList[i];
+                ctx.fillStyle = "#1e293b";
+                ctx.font = "bold 18px Inter, sans-serif";
+                ctx.fillText(`[${idx+1}] ${item.location}`, 230, startY + 40);
+
+                ctx.fillStyle = "#475569";
+                ctx.font = "14px Inter, sans-serif";
+                ctx.fillText(item.description || '설명 없음', 230, startY + 80);
+
+                ctx.fillStyle = "#94a3b8";
+                ctx.font = "12px Inter, sans-serif";
+                ctx.fillText(`촬영일: ${item.date}`, 230, startY + 120);
+
                 const img = new Image();
-                img.crossOrigin = "anonymous";
                 img.onload = function() {
-                    const col = i % cols;
-                    const row = Math.floor(i / cols);
-                    const x = startX + col * (cardW + 40);
-                    const y = startY + row * (cardH + 40);
-
-                    ctx.fillStyle = '#f8fafc';
-                    ctx.fillRect(x, y, cardW, cardH);
-                    ctx.strokeStyle = '#cbd5e1';
-                    ctx.strokeRect(x, y, cardW, cardH);
-
-                    ctx.drawImage(img, x + 20, y + 20, cardW - 40, 340);
-
-                    ctx.fillStyle = '#0f172a';
-                    ctx.font = 'bold 18px Inter, sans-serif';
-                    ctx.fillText(`[${item.date}] 현장 작업`, x + 20, y + 390);
-
-                    ctx.fillStyle = '#334155';
-                    ctx.font = '16px Inter, sans-serif';
-                    // Wrap text
-                    const words = item.description;
-                    ctx.fillText(words.slice(0, 45) + (words.length > 45 ? '...' : ''), x + 20, y + 430);
-
-                    loadedCount++;
-                    if (loadedCount === drawLimit) {
-                        const link = document.createElement('a');
-                        link.download = `강릉NH금융센터_종합포트폴리오_${new Date().toISOString().slice(0, 10)}.jpg`;
-                        link.href = canvas.toDataURL('image/jpeg', 0.9);
-                        link.click();
-                        showToast("포트폴리오 카드 이미지가 성공적으로 저장되었습니다!");
-                    }
+                    ctx.drawImage(img, 70, startY + 15, 130, 130);
                 };
-                img.src = item.url;
-            }
+                img.src = item.imageUrl;
+
+                startY += 190;
+            });
+
+            const link = document.createElement('a');
+            link.download = `강릉NH금융센터_통합포트폴리오_${new Date().toISOString().slice(0,10)}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showToast("📸 1장 통합 포트폴리오 이미지 다운로드 완료!");
+        };
+
+        function renderAdminUserTable() {
+            const tbody = document.getElementById('adminUserTableBody');
+            const countBadge = document.getElementById('adminUserCountBadge');
+            if (countBadge) countBadge.innerText = `${registeredUsers.length}명 등록됨`;
+            if (!tbody) return;
+
+            tbody.innerHTML = registeredUsers.map(u => `
+                <tr class="border-b hover:bg-slate-50">
+                    <td class="p-3 font-bold text-slate-800">${u.userId}</td>
+                    <td class="p-3 text-slate-600">${u.name}</td>
+                    <td class="p-3"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[10px] font-bold">활성화됨</span></td>
+                    <td class="p-3 text-right">
+                        ${u.userId !== 'admin' ? `<button onclick="deleteUser('${u.userId}')" class="px-2.5 py-1 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold rounded-lg text-[11px] transition">계정 삭제</button>` : `<span class="text-slate-400 text-[11px]">기본 관리자</span>`}
+                    </td>
+                </tr>
+            `).join('');
         }
 
-        window.showToast = function(msg) {
+        window.deleteUser = async function(uid) {
+            registeredUsers = registeredUsers.filter(u => u.userId !== uid);
+            await saveRegisteredUsersToCloud();
+            renderAdminUserTable();
+            showToast("사용자 계정이 삭제되었습니다.");
+        };
+
+        function showToast(msg) {
             const toast = document.getElementById('toastMessage');
-            const text = document.getElementById('toastText');
-            if (!toast || !text) return;
-            text.innerText = msg;
+            const textEl = document.getElementById('toastText');
+            if (!toast || !textEl) return;
+            textEl.innerText = msg;
             toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => {
                 toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3500);
+            }, 3000);
         }
     </script>
 </body>
