@@ -73,10 +73,27 @@
                 </button>
             </div>
 
-            <div class="text-center text-[11px] text-slate-400">
-                ☁️ Firebase 클라우드 DB 실시간 공용 연동으로 스마트폰과 PC 간 사진 및 데이터가 완벽 동기화됩니다.<br>
-                기본 계정: 아이디 <code class="bg-slate-100 px-1 py-0.5 rounded text-slate-700">member1</code> / 비번 <code class="bg-slate-100 px-1 py-0.5 rounded text-slate-700">비번1</code>
+            <button type="button" id="pwaInstallBtn" onclick="handleAddToHomeScreen()" class="w-full py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold rounded-xl text-xs transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-mobile-screen-button"></i> 홈 화면에 바로가기 추가
+            </button>
+
+            <div class="text-center text-[10px] text-slate-400 leading-relaxed pt-1 border-t border-slate-100">
+                © 2026 kimyongwoo · qc1773@gmail.com<br>
+                <span id="siteUrlLabel">wizcon.vercel.app</span>
             </div>
+        </div>
+    </div>
+
+    <div id="pwaInstallModal" class="fixed inset-0 bg-slate-900/80 z-[60] flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 space-y-4">
+            <div class="text-center space-y-1">
+                <div class="w-12 h-12 bg-blue-600 text-white rounded-2xl mx-auto flex items-center justify-center text-xl font-bold shadow">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                </div>
+                <h3 class="font-black text-slate-900 text-base">홈 화면에 추가하기</h3>
+            </div>
+            <p id="pwaInstallInstructions" class="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl"></p>
+            <button type="button" onclick="document.getElementById('pwaInstallModal').classList.add('hidden')" class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs transition">확인</button>
         </div>
     </div>
 
@@ -100,31 +117,31 @@
     </div>
 
     <header id="mainHeader" class="bg-slate-900 text-white shadow-md sticky top-0 z-40 hidden no-print">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-hard-hat text-amber-400 text-xl"></i>
                 <h1 class="font-bold text-lg tracking-tight">스마트건설관리 <span class="text-xs text-slate-400 font-normal">| NH농협은행 강릉 금융센터 신축공사</span></h1>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
-                <nav id="topNavTabs" class="flex flex-wrap gap-2 text-xs font-medium">
-                    <button onclick="goHome()" id="btnMain_home" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white transition flex items-center gap-1.5 shadow font-bold">
-                        <i class="fa-solid fa-house"></i> 홈
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                <nav id="topNavTabs" class="grid grid-cols-4 sm:flex gap-1.5 sm:gap-2 text-xs font-medium w-full sm:w-auto">
+                    <button onclick="goHome()" id="btnMain_home" class="px-2 sm:px-3 py-1.5 rounded-lg bg-blue-600 text-white transition flex items-center justify-center gap-1.5 shadow font-bold">
+                        <i class="fa-solid fa-house"></i> <span class="hidden xs:inline">홈</span>
                     </button>
-                    <button onclick="toggleSubMenu('photo')" id="btnMain_photo" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5 font-bold">
-                        <i class="fa-solid fa-camera"></i> 사진 <i class="fa-solid fa-chevron-down text-[10px] ml-0.5"></i>
+                    <button onclick="toggleSubMenu('photo')" id="btnMain_photo" class="px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center justify-center gap-1 font-bold">
+                        <i class="fa-solid fa-camera"></i> 사진 <i class="fa-solid fa-chevron-down text-[9px]"></i>
                     </button>
-                    <button onclick="toggleSubMenu('quality')" id="btnMain_quality" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5 font-bold">
-                        <i class="fa-solid fa-clipboard-check"></i> 품질 <i class="fa-solid fa-chevron-down text-[10px] ml-0.5"></i>
+                    <button onclick="toggleSubMenu('quality')" id="btnMain_quality" class="px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center justify-center gap-1 font-bold">
+                        <i class="fa-solid fa-clipboard-check"></i> 품질 <i class="fa-solid fa-chevron-down text-[9px]"></i>
                     </button>
-                    <button onclick="toggleSubMenu('drawing')" id="btnMain_drawing" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center gap-1.5 font-bold">
-                        <i class="fa-solid fa-compass-drafting"></i> 도면 <i class="fa-solid fa-chevron-down text-[10px] ml-0.5"></i>
-                    </button>
-                    <button onclick="handleAdminModeToggle()" id="btnTabAdminView" class="px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-white transition flex items-center gap-1.5 font-bold">
-                        <i class="fa-solid fa-lock" id="adminModeBtnIcon"></i> <span id="adminModeBtnText">ADMIN 인증</span>
+                    <button onclick="toggleSubMenu('drawing')" id="btnMain_drawing" class="px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center justify-center gap-1 font-bold">
+                        <i class="fa-solid fa-compass-drafting"></i> 도면 <i class="fa-solid fa-chevron-down text-[9px]"></i>
                     </button>
                 </nav>
-                <div class="flex items-center gap-2 pl-2 border-l border-slate-700">
-                    <button onclick="handleLogout()" class="px-3 py-1.5 rounded-lg bg-rose-600/20 text-rose-300 hover:bg-rose-600 hover:text-white transition text-xs font-bold flex items-center gap-1">
+                <div class="flex items-center gap-2 sm:pl-2 sm:border-l sm:border-slate-700">
+                    <button onclick="handleAdminModeToggle()" id="btnTabAdminView" class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-white transition flex items-center justify-center gap-1.5 font-bold text-xs">
+                        <i class="fa-solid fa-lock" id="adminModeBtnIcon"></i> <span id="adminModeBtnText">ADMIN 인증</span>
+                    </button>
+                    <button onclick="handleLogout()" class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-rose-600/20 text-rose-300 hover:bg-rose-600 hover:text-white transition text-xs font-bold flex items-center justify-center gap-1">
                         <i class="fa-solid fa-right-from-bracket"></i> 로그아웃
                     </button>
                 </div>
@@ -587,9 +604,12 @@
         let db, auth, appId;
         let unsubscribeUsers = null;
         let unsubscribeGlobalPhotos = null;
+        let globalPhotosSynced = false;
         let unsubscribeSettings = null;
 
         window.onload = async function() {
+            const siteUrlLabelEl = document.getElementById('siteUrlLabel');
+            if (siteUrlLabelEl) siteUrlLabelEl.innerText = window.location.host;
             const firebaseConfig = {
                 apiKey: "AIzaSyBlq213t9H-XfbeJb5uMCWhAYX-tRFnlOA",
                 authDomain: "gangneung-nh-photo.firebaseapp.com",
@@ -665,12 +685,17 @@
                 } else {
                     setDoc(globalPhotosRef, { archive: archiveList, sheet: sheetPhotoList }).catch(() => {});
                 }
-            }, (err) => {});
+                globalPhotosSynced = true;
+            }, (err) => { globalPhotosSynced = true; });
         }
 
         async function saveGlobalPublicPhotosToCloud() {
             localStorage.setItem('smart_construction_global_public_photos', JSON.stringify({ archive: archiveList, sheet: sheetPhotoList }));
             if (!db) return;
+            if (!globalPhotosSynced) {
+                showToast("⏳ 클라우드 데이터를 아직 불러오는 중입니다. 잠시 후 다시 시도해 주세요.");
+                return;
+            }
             try {
                 const safeAppId = appId.replace(/[^a-zA-Z0-9_-]/g, '_');
                 const globalPhotosRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'data', 'global_public_site_photos_v2');
@@ -852,6 +877,34 @@
             updateAdminButtonState();
             lockApp();
             showToast("로그아웃 되었습니다.");
+        };
+
+        let deferredInstallPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+        });
+
+        window.handleAddToHomeScreen = async function() {
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                await deferredInstallPrompt.userChoice;
+                deferredInstallPrompt = null;
+                return;
+            }
+            const ua = navigator.userAgent;
+            const isIOS = /iphone|ipad|ipod/i.test(ua);
+            const isAndroid = /android/i.test(ua);
+            let msg = "";
+            if (isIOS) {
+                msg = "하단(또는 상단)의 공유 버튼(⬆️)을 누른 뒤, '홈 화면에 추가'를 선택해주세요.";
+            } else if (isAndroid) {
+                msg = "브라우저 우측 상단 메뉴(⋮)를 누른 뒤, '홈 화면에 추가' 또는 '앱 설치'를 선택해주세요.";
+            } else {
+                msg = "브라우저 메뉴에서 '홈 화면에 추가' 또는 '앱 설치' 항목을 찾아 선택해주세요.";
+            }
+            document.getElementById('pwaInstallInstructions').innerText = msg;
+            document.getElementById('pwaInstallModal').classList.remove('hidden');
         };
 
         window.handleAdminModeToggle = function() {
