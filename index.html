@@ -508,8 +508,15 @@
         let unsubscribeSettings = null;
 
         window.onload = async function() {
-            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "demo", projectId: "demo" };
-            appId = typeof __app_id !== 'undefined' ? __app_id : 'gangneung-nh-default';
+            const firebaseConfig = {
+                apiKey: "AIzaSyBlq213t9H-XfbeJb5uMCWhAYX-tRFnlOA",
+                authDomain: "gangneung-nh-photo.firebaseapp.com",
+                projectId: "gangneung-nh-photo",
+                storageBucket: "gangneung-nh-photo.firebasestorage.app",
+                messagingSenderId: "212764985165",
+                appId: "1:212764985165:web:0dd347561feabf91ab5904"
+            };
+            appId = 'gangneung-nh-default';
 
             try {
                 const app = initializeApp(firebaseConfig);
