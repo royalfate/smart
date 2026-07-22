@@ -460,7 +460,6 @@
         </section>
     </main>
 
-    <!-- Hidden Export Card Container -->
     <div id="singlePortfolioExportWrapper" class="fixed -top-[9999px] left-0 bg-slate-900 p-8 w-[800px]" style="font-family: 'Inter', sans-serif;">
         <div id="singlePortfolioExportCard" class="bg-white rounded-3xl p-8 shadow-2xl space-y-6">
             <div class="border-b pb-4 flex justify-between items-center">
@@ -479,7 +478,6 @@
         </div>
     </div>
 
-    <!-- Toast Notification Message Box -->
     <div id="toastMessage" class="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl text-xs z-50 flex items-center gap-2 transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none">
         <i class="fa-solid fa-circle-check text-emerald-400"></i>
         <span id="toastText">작업이 완료되었습니다.</span>
@@ -1024,7 +1022,6 @@
             const doSheet = document.getElementById('syncSheet').checked;
             const doArchive = document.getElementById('syncArchive').checked;
 
-            // Deep clone items so modifications don't reference the active staging list directly
             const clonedItems = activePhotoList.map(item => ({ ...item }));
 
             if (doSheet) {
@@ -1035,10 +1032,8 @@
                 archiveList = [...archiveList, ...newArchiveItems];
             }
 
-            // Immediately persist to cloud/localStorage and update views
             await saveGlobalPublicPhotosToCloud();
             
-            // Re-render views right away
             renderPrintSheets();
             renderArchiveList();
             updateDashboardCounts();
