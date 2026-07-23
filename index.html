@@ -1270,11 +1270,12 @@
             switchTab('tabHomeView');
         };
 
-        window.handleMultiplePhotos = function(event) {
+        window.handleMultiplePhotos = async function(event) {
             const files = event.target.files;
             if (!files || files.length === 0) return;
+            const fileArray = Array.from(files);
 
-            Array.from(files).forEach((file) => {
+            const processFile = (file) => new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = new Image();
@@ -1295,25 +1296,32 @@
                         canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-                        
+
                         const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
 
-                        const newItem = {
+                        resolve({
                             id: 'photo_' + Date.now() + '_' + Math.floor(Math.random()*10000),
                             imageUrl: compressedDataUrl,
                             date: new Date().toISOString().slice(0, 10),
                             location: `${siteSettings.siteName} 현장`,
                             description: siteSettings.defaultDesc
-                        };
-                        activePhotoList.push(newItem);
-                        if (activePhotoList.length === 1) activeSelectedIndex = 0;
-                        renderThumbnailGrid();
-                        updateBandUnifiedText();
+                        });
                     };
                     img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             });
+
+            // Promise.all은 결과 순서를 파일 선택 순서 그대로 보장하므로,
+            // 사진마다 압축 속도가 달라도 선택한 순서대로 등록됩니다.
+            const newItems = await Promise.all(fileArray.map(processFile));
+
+            const wasEmpty = activePhotoList.length === 0;
+            activePhotoList.push(...newItems);
+            if (wasEmpty && activePhotoList.length > 0) activeSelectedIndex = 0;
+            renderThumbnailGrid();
+            updateBandUnifiedText();
+
             showToast(`${files.length}장의 사진이 등록되었습니다.`);
             event.target.value = '';
         };
@@ -1761,18 +1769,22 @@
         };
 
         window.downloadSinglePortfolioImage = async function() {
-            if (archiveList.length === 0) {
-                showToast("포트폴리오로 생성할 사진이 없습니다.");
+            const filterInput = document.getElementById('archiveFilterDate');
+            const targetDate = (filterInput && filterInput.value) || new Date().toISOString().slice(0, 10);
+            const todaysPhotos = archiveList.filter(item => item.date === targetDate);
+
+            if (todaysPhotos.length === 0) {
+                showToast(`${targetDate} 날짜에 등록된 사진이 없습니다.`);
                 return;
             }
             showToast("🖼️ 세로형 1장 포트폴리오 이미지를 생성 중입니다...");
 
             document.getElementById('exportBadgeSiteName').innerText = siteSettings.siteName;
-            document.getElementById('exportMainTitle').innerText = `현장사진대지(총 ${archiveList.length}장)`;
-            document.getElementById('exportDateLabel').innerText = `날짜: ${new Date().toISOString().slice(0, 10)}`;
+            document.getElementById('exportMainTitle').innerText = `현장사진대지(총 ${todaysPhotos.length}장)`;
+            document.getElementById('exportDateLabel').innerText = `날짜: ${targetDate}`;
 
             const cardsGrid = document.getElementById('exportCardsGrid');
-            cardsGrid.innerHTML = archiveList.map((item, idx) => `
+            cardsGrid.innerHTML = todaysPhotos.map((item, idx) => `
                 <div>
                     <div class="w-full h-[320px] bg-slate-200 rounded-xl overflow-hidden flex items-center justify-center">
                         <img src="${item.imageUrl}" class="w-full h-full object-cover">
@@ -1787,7 +1799,7 @@
             try {
                 const canvas = await html2canvas(wrapper, { scale: 2, useCORS: true });
                 const link = document.createElement('a');
-                link.download = `현장세로형포트폴리오_${new Date().toISOString().slice(0,10)}.png`;
+                link.download = `현장세로형포트폴리오_${targetDate}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
                 showToast("✨ 세로형 1장 포트폴리오 이미지 저장 완료!");
