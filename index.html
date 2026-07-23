@@ -701,23 +701,53 @@
             }
 
             const safeAppId = appId.replace(/[^a-zA-Z0-9_-]/g, '_');
-            const globalPhotosRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'data', 'global_public_site_photos_v2');
+            const sheetDocRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'data', 'global_sheet_photos_v3');
+            const archiveDocRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'data', 'global_archive_photos_v3');
+            const legacyDocRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'data', 'global_public_site_photos_v2');
 
-            unsubscribeGlobalPhotos = onSnapshot(globalPhotosRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    archiveList = data.archive || [];
-                    sheetPhotoList = data.sheet || [];
-                    localStorage.setItem('smart_construction_global_public_photos', JSON.stringify({ archive: archiveList, sheet: sheetPhotoList }));
-                    updateDashboardCounts();
-                    renderArchiveList();
-                    renderPrintSheets();
-                    if (isAdminMode) renderAdminPhotoEditorList();
-                } else {
-                    setDoc(globalPhotosRef, { archive: archiveList, sheet: sheetPhotoList }).catch(() => {});
-                }
-                resolveGlobalPhotosReady();
-            }, (err) => { resolveGlobalPhotosReady(); });
+            (async () => {
+                // 예전 방식(문서 1개에 전부 저장)으로 남아있는 데이터가 있으면,
+                // 문서 2개(준공대지/보관함)로 나누어 자동 이전합니다. 용량 제한 문제를 근본적으로 없애기 위함입니다.
+                try {
+                    const [sheetSnap, archiveSnap, legacySnap] = await Promise.all([
+                        getDoc(sheetDocRef), getDoc(archiveDocRef), getDoc(legacyDocRef)
+                    ]);
+                    if (!sheetSnap.exists() && !archiveSnap.exists() && legacySnap.exists()) {
+                        const legacyData = legacySnap.data();
+                        await Promise.all([
+                            setDoc(sheetDocRef, { sheet: legacyData.sheet || [] }),
+                            setDoc(archiveDocRef, { archive: legacyData.archive || [] })
+                        ]);
+                    }
+                } catch(e) {}
+
+                let sheetReady = false, archiveReady = false;
+                const checkBothReady = () => { if (sheetReady && archiveReady) resolveGlobalPhotosReady(); };
+
+                onSnapshot(sheetDocRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        sheetPhotoList = docSnap.data().sheet || [];
+                        localStorage.setItem('smart_construction_global_public_photos', JSON.stringify({ archive: archiveList, sheet: sheetPhotoList }));
+                        updateDashboardCounts();
+                        renderPrintSheets();
+                        if (isAdminMode) renderAdminPhotoEditorList();
+                    }
+                    sheetReady = true;
+                    checkBothReady();
+                }, () => { sheetReady = true; checkBothReady(); });
+
+                onSnapshot(archiveDocRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        archiveList = docSnap.data().archive || [];
+                        localStorage.setItem('smart_construction_global_public_photos', JSON.stringify({ archive: archiveList, sheet: sheetPhotoList }));
+                        updateDashboardCounts();
+                        renderArchiveList();
+                        if (isAdminMode) renderAdminPhotoEditorList();
+                    }
+                    archiveReady = true;
+                    checkBothReady();
+                }, () => { archiveReady = true; checkBothReady(); });
+            })();
         }
 
         async function saveGlobalPublicPhotosToCloud() {
@@ -731,10 +761,16 @@
             ]);
             try {
                 const safeAppId = appId.replace(/[^a-zA-Z0-9_-]/g, '_');
-                const globalPhotosRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'data', 'global_public_site_photos_v2');
-                await setDoc(globalPhotosRef, { archive: archiveList, sheet: sheetPhotoList });
+                const sheetDocRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'data', 'global_sheet_photos_v3');
+                const archiveDocRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'data', 'global_archive_photos_v3');
+                await Promise.all([
+                    setDoc(sheetDocRef, { sheet: sheetPhotoList }),
+                    setDoc(archiveDocRef, { archive: archiveList })
+                ]);
                 createAutoBackup();
-            } catch(e) {}
+            } catch(e) {
+                showToast(`⚠️ 클라우드 저장 실패: ${e && e.message ? e.message : '알 수 없는 오류'}`);
+            }
         }
 
         async function createAutoBackup() {
@@ -743,12 +779,12 @@
             try {
                 const safeAppId = appId.replace(/[^a-zA-Z0-9_-]/g, '_');
                 const todayStr = new Date().toISOString().slice(0, 10);
-                const backupRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'backups', todayStr);
-                await setDoc(backupRef, {
-                    archive: archiveList,
-                    sheet: sheetPhotoList,
-                    savedAt: new Date().toISOString()
-                });
+                const sheetBackupRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'backups_sheet', todayStr);
+                const archiveBackupRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'backups_archive', todayStr);
+                await Promise.all([
+                    setDoc(sheetBackupRef, { sheet: sheetPhotoList, savedAt: new Date().toISOString() }),
+                    setDoc(archiveBackupRef, { archive: archiveList, savedAt: new Date().toISOString() })
+                ]);
             } catch(e) {}
         }
 
@@ -770,26 +806,40 @@
             listEl.innerHTML = `<div class="text-center text-xs text-slate-400 py-4">불러오는 중...</div>`;
             try {
                 const safeAppId = appId.replace(/[^a-zA-Z0-9_-]/g, '_');
-                const backupsCol = collection(db, 'artifacts', `${safeAppId}_public_data`, 'backups');
-                const snap = await getDocs(backupsCol);
-                const backups = [];
-                snap.forEach(d => backups.push({ id: d.id, ...d.data() }));
-                backups.sort((a, b) => (b.id || '').localeCompare(a.id || ''));
+                const sheetBackupsCol = collection(db, 'artifacts', `${safeAppId}_public_data`, 'backups_sheet');
+                const archiveBackupsCol = collection(db, 'artifacts', `${safeAppId}_public_data`, 'backups_archive');
+                const [sheetSnap, archiveSnap] = await Promise.all([getDocs(sheetBackupsCol), getDocs(archiveBackupsCol)]);
 
-                if (backups.length === 0) {
+                const merged = {};
+                sheetSnap.forEach(d => {
+                    const data = d.data();
+                    merged[d.id] = merged[d.id] || {};
+                    merged[d.id].sheetCount = (data.sheet || []).length;
+                    merged[d.id].savedAt = data.savedAt;
+                });
+                archiveSnap.forEach(d => {
+                    const data = d.data();
+                    merged[d.id] = merged[d.id] || {};
+                    merged[d.id].archiveCount = (data.archive || []).length;
+                    merged[d.id].savedAt = merged[d.id].savedAt || data.savedAt;
+                });
+
+                const ids = Object.keys(merged).sort((a, b) => b.localeCompare(a));
+                if (ids.length === 0) {
                     listEl.innerHTML = `<div class="text-center text-xs text-slate-400 py-4">저장된 백업이 아직 없습니다.</div>`;
                     return;
                 }
-                listEl.innerHTML = backups.map(b => {
-                    const count = (b.archive ? b.archive.length : 0) + (b.sheet ? b.sheet.length : 0);
+                listEl.innerHTML = ids.map(id => {
+                    const b = merged[id];
+                    const count = (b.sheetCount || 0) + (b.archiveCount || 0);
                     const savedAtStr = b.savedAt ? new Date(b.savedAt).toLocaleString() : '';
                     return `
                         <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
                             <div>
-                                <p class="text-xs font-bold text-slate-800">${b.id}</p>
+                                <p class="text-xs font-bold text-slate-800">${id}</p>
                                 <p class="text-[10px] text-slate-400 mt-0.5">사진 ${count}장 · 마지막 저장: ${savedAtStr}</p>
                             </div>
-                            <button onclick="restoreFromBackup('${b.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5">
+                            <button onclick="restoreFromBackup('${id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5">
                                 <i class="fa-solid fa-clock-rotate-left"></i> 이 시점으로 복원
                             </button>
                         </div>
@@ -808,22 +858,31 @@
 
                 // 복원하기 전, 현재 상태를 안전하게 별도 백업해둠
                 const preRestoreId = `복원전_${new Date().toISOString().replace(/[:.]/g, '-')}`;
-                const preRestoreRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'backups', preRestoreId);
-                await setDoc(preRestoreRef, { archive: archiveList, sheet: sheetPhotoList, savedAt: new Date().toISOString() });
+                const preSheetRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'backups_sheet', preRestoreId);
+                const preArchiveRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'backups_archive', preRestoreId);
+                await Promise.all([
+                    setDoc(preSheetRef, { sheet: sheetPhotoList, savedAt: new Date().toISOString() }),
+                    setDoc(preArchiveRef, { archive: archiveList, savedAt: new Date().toISOString() })
+                ]);
 
-                const backupRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'backups', backupId);
-                const snap = await getDoc(backupRef);
-                if (!snap.exists()) {
+                const sheetBackupRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'backups_sheet', backupId);
+                const archiveBackupRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'backups_archive', backupId);
+                const [sheetSnap, archiveSnap] = await Promise.all([getDoc(sheetBackupRef), getDoc(archiveBackupRef)]);
+
+                if (!sheetSnap.exists() && !archiveSnap.exists()) {
                     showToast("해당 백업을 찾을 수 없습니다.");
                     return;
                 }
-                const data = snap.data();
-                archiveList = data.archive || [];
-                sheetPhotoList = data.sheet || [];
+                sheetPhotoList = sheetSnap.exists() ? (sheetSnap.data().sheet || []) : [];
+                archiveList = archiveSnap.exists() ? (archiveSnap.data().archive || []) : [];
 
                 localStorage.setItem('smart_construction_global_public_photos', JSON.stringify({ archive: archiveList, sheet: sheetPhotoList }));
-                const globalPhotosRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'data', 'global_public_site_photos_v2');
-                await setDoc(globalPhotosRef, { archive: archiveList, sheet: sheetPhotoList });
+                const sheetDocRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'data', 'global_sheet_photos_v3');
+                const archiveDocRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'data', 'global_archive_photos_v3');
+                await Promise.all([
+                    setDoc(sheetDocRef, { sheet: sheetPhotoList }),
+                    setDoc(archiveDocRef, { archive: archiveList })
+                ]);
 
                 updateDashboardCounts();
                 renderArchiveList();
