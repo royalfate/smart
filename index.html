@@ -6,12 +6,12 @@
     <title>스마트건설관리 - NH농협은행 강릉 금융센터 현장일보 (클라우드 동기화)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         .print-page {
@@ -30,7 +30,7 @@
             #tabPrintSheetView { display: block !important; }
         }
         @media screen and (max-width: 640px) {
-            #a4SheetsContainer.mobile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+            #a4SheetsContainer.mobile-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
             #a4SheetsContainer.mobile-grid .date-divider { grid-column: 1 / -1; }
             .print-page-wrapper { position: relative; width: 100%; overflow: hidden; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); background: white; }
             .print-page-wrapper .print-page { transform-origin: top left; margin: 0 !important; box-shadow: none !important; }
@@ -39,6 +39,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
 
+    <!-- Authentication Overlay -->
     <div id="authOverlay" class="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl p-8 space-y-6">
             <div class="text-center space-y-2">
@@ -86,6 +87,7 @@
         </div>
     </div>
 
+    <!-- PWA Installation Modal -->
     <div id="pwaInstallModal" class="fixed inset-0 bg-slate-900/80 z-[60] flex items-center justify-center p-4 hidden">
         <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 space-y-4">
             <div class="text-center space-y-1">
@@ -99,6 +101,7 @@
         </div>
     </div>
 
+    <!-- Admin Authentication Modal -->
     <div id="adminPromptModal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 space-y-4">
             <div class="text-center space-y-1">
@@ -360,23 +363,41 @@
         <!-- Tab 2: Print Sheet View -->
         <section id="tabPrintSheetView" class="hidden space-y-6">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
                     <div>
                         <h2 class="font-bold text-lg text-slate-800 flex items-center gap-2">
                             <i class="fa-solid fa-file-lines text-blue-600"></i> 공식 준공 사진대지 (클라우드 실시간 공용 연동)
                         </h2>
-                        <p class="text-xs text-slate-500">A4 1장당 사진 2장씩 자동 배치되어 출력됩니다. 모든 기기에서 동일하게 조회됩니다.</p>
+                        <p class="text-xs text-slate-500">A4 1장당 사진 2장씩 자동 배치되어 출력됩니다. 하루 날짜를 선택하면 해당 날짜 사진이 모두 나타납니다.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <button onclick="downloadAllSheetsAsImages()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow flex items-center gap-1.5 transition">
-                            <i class="fa-solid fa-image"></i> 🖼️ 이미지(PNG)로 저장
+                            <i class="fa-solid fa-image"></i> 이미지(PNG)로 저장
                         </button>
                         <button onclick="downloadAllSheetsAsPDF()" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs shadow flex items-center gap-1.5 transition">
-                            <i class="fa-solid fa-file-pdf"></i> 📄 전체 PDF로 이어붙여 저장
+                            <i class="fa-solid fa-file-pdf"></i> 전체 PDF 저장
                         </button>
                         <button onclick="window.print()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow flex items-center gap-1.5 transition">
-                            <i class="fa-solid fa-print"></i> 🖨️ 인쇄 / PDF 저장
+                            <i class="fa-solid fa-print"></i> 인쇄 / PDF
                         </button>
+                    </div>
+                </div>
+
+                <!-- Date Filter Control Bar for Print Sheet View -->
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-xs font-bold text-slate-700 flex items-center gap-1">
+                            <i class="fa-solid fa-calendar-check text-blue-600"></i> 준공대지 날짜 선택:
+                        </span>
+                        <input type="date" id="sheetFilterDate" onchange="renderPrintSheets()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-medium text-slate-800">
+                        <div class="flex gap-1">
+                            <button onclick="setSheetDateFilter('all')" class="px-2.5 py-1 bg-white hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-bold rounded-lg shadow-sm">전체보기</button>
+                            <button onclick="setSheetDateFilter('today')" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 text-xs font-bold rounded-lg shadow-sm">오늘</button>
+                            <button onclick="setSheetDateFilter('yesterday')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold rounded-lg shadow-sm">어제</button>
+                        </div>
+                    </div>
+                    <div id="sheetFilterSummary" class="text-xs text-slate-500 font-medium text-right sm:text-left">
+                        전체 사진 조회 중
                     </div>
                 </div>
 
@@ -400,7 +421,9 @@
                     </div>
                     <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                         <input type="date" id="archiveFilterDate" onchange="renderArchiveList()" class="px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 w-full sm:w-auto min-w-[140px] appearance-auto">
-                        <button onclick="resetArchiveFilter()" class="px-3 py-1.5 bg-slate-100 text-slate-600 text-xs rounded-lg hover:bg-slate-200">전체보기</button>
+                        <button onclick="setArchiveDateFilter('today')" class="px-2.5 py-1.5 bg-blue-50 text-blue-700 font-bold border border-blue-200 text-xs rounded-lg hover:bg-blue-100">오늘</button>
+                        <button onclick="setArchiveDateFilter('yesterday')" class="px-2.5 py-1.5 bg-amber-50 text-amber-800 font-bold border border-amber-200 text-xs rounded-lg hover:bg-amber-100">어제</button>
+                        <button onclick="resetArchiveFilter()" class="px-3 py-1.5 bg-slate-100 text-slate-600 font-bold text-xs rounded-lg hover:bg-slate-200">전체보기</button>
                         <button onclick="downloadAllArchivePhotos()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5">
                             <i class="fa-solid fa-file-zipper"></i> 전체 다운로드
                         </button>
@@ -412,7 +435,7 @@
                         <span class="text-xs font-black text-blue-900 flex items-center gap-1.5 justify-center sm:justify-start">
                             <i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i> 세로형 일체형 포트폴리오 카드 이미지 다운로드 (사진 상단 + 글 하단)
                         </span>
-                        <p class="text-[11px] text-slate-600">클라우드에 공용 동기화된 모든 현장 사진과 작업 내용을 <strong>사진이 위에 있고 글이 아래에 있는 세로형 1장 이미지</strong>로 완벽하게 변환합니다!</p>
+                        <p class="text-[11px] text-slate-600">선택된 날짜의 모든 현장 사진과 작업 내용을 <strong>사진이 위에 있고 글이 아래에 있는 세로형 1장 이미지</strong>로 변환합니다!</p>
                     </div>
                     <button onclick="downloadSinglePortfolioImage()" class="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-lg transition flex items-center gap-2 whitespace-nowrap">
                         <i class="fa-solid fa-image"></i> 🖼️ 세로형 1장 포트폴리오 저장
@@ -429,21 +452,36 @@
                 <div class="space-y-1">
                     <span class="bg-amber-500 text-slate-900 px-3 py-1 rounded-full text-xs font-bold inline-block">👑 관리자 통합 통제 센터</span>
                     <h2 class="text-xl sm:text-2xl font-black">현장 시스템 관리자 모드</h2>
-                    <p class="text-xs text-amber-200">등록된 공용 사진을 개별 수정·삭제하거나 사용자 계정 및 시스템 설정을 통제합니다.</p>
+                    <p class="text-xs text-amber-200">등록된 공용 사진을 날짜별로 조회/수정·삭제하거나 사용자 계정 및 시스템 설정을 통제합니다.</p>
                 </div>
                 <button onclick="exitAdminMode()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-xl text-xs font-bold border border-amber-500/30 transition">
                     일반 모드로 전환
                 </button>
             </div>
 
-            <!-- Unified Photo Manager (Deletion & Editing) -->
+            <!-- Unified Photo Manager (Deletion & Editing with Date Selector) -->
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                <div class="flex justify-between items-center">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-3">
                     <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
-                        <i class="fa-solid fa-images text-amber-600"></i> 공용 등록된 준공대지 및 보관함 사진 개별 수정 및 삭제
+                        <i class="fa-solid fa-images text-amber-600"></i> 공용 등록된 준공대지 사진 날짜별 조회 및 관리
                     </h3>
                     <span id="adminPhotoCountBadge" class="text-xs font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">0장 등록됨</span>
                 </div>
+
+                <!-- Admin Date Selector -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-xs font-bold text-slate-700 flex items-center gap-1">
+                            <i class="fa-solid fa-filter text-amber-600"></i> 관리자 날짜 선택:
+                        </span>
+                        <input type="date" id="adminFilterDate" onchange="renderAdminPhotoEditorList()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-bold text-slate-800">
+                        <button onclick="setAdminDateFilter('all')" class="px-2.5 py-1 bg-white hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-bold rounded-lg shadow-sm">전체보기</button>
+                        <button onclick="setAdminDateFilter('today')" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 text-xs font-bold rounded-lg shadow-sm">오늘</button>
+                        <button onclick="setAdminDateFilter('yesterday')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold rounded-lg shadow-sm">어제</button>
+                    </div>
+                    <span id="adminFilterSummary" class="text-xs text-slate-500 font-medium">전체 사진 목록</span>
+                </div>
+
                 <div id="adminPhotoEditorList" class="space-y-3 max-h-96 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200 custom-scrollbar">
                     <div class="text-center py-8 text-slate-400 text-xs">등록된 사진이 없습니다.</div>
                 </div>
@@ -498,6 +536,7 @@
                 </button>
             </div>
 
+            <!-- Backup Control -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
@@ -521,7 +560,7 @@
             </div>
         </section>
 
-        <!-- 품질 하위 탭 (빈 페이지 - 추후 채움) -->
+        <!-- 품질 하위 탭 -->
         <section id="tabMaterialApprovalView" class="hidden space-y-6">
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-3 min-h-[420px]">
                 <i class="fa-solid fa-file-signature text-4xl text-slate-300"></i>
@@ -544,7 +583,7 @@
             </div>
         </section>
 
-        <!-- 도면 하위 탭 (빈 페이지 - 추후 채움) -->
+        <!-- 도면 하위 탭 -->
         <section id="tabDrawingOverviewView" class="hidden space-y-6">
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-3 min-h-[420px]">
                 <i class="fa-solid fa-list-check text-4xl text-slate-300"></i>
@@ -589,6 +628,7 @@
         </section>
     </main>
 
+    <!-- Hidden Export Card for Single Vertical Portfolio PNG Export -->
     <div id="singlePortfolioExportWrapper" class="fixed -top-[9999px] left-0 bg-white p-0 w-[800px]" style="font-family: 'Inter', sans-serif;">
         <div id="singlePortfolioExportCard" class="bg-white p-3 space-y-4">
             <div class="pb-1 flex justify-between items-end">
@@ -597,13 +637,14 @@
                     <h2 class="text-2xl font-black text-blue-600 mt-1" id="exportMainTitle">현장사진대지(총 0장)</h2>
                 </div>
                 <div class="text-right text-xs text-slate-500 font-mono" id="exportDateLabel">
-                    날짜: 2026-07-22
+                    날짜: 2026-07-23
                 </div>
             </div>
             <div id="exportCardsGrid" class="space-y-7"></div>
         </div>
     </div>
 
+    <!-- Toast Notification -->
     <div id="toastMessage" class="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl text-xs z-50 flex items-center gap-2 transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none">
         <i class="fa-solid fa-circle-check text-emerald-400"></i>
         <span id="toastText">작업이 완료되었습니다.</span>
@@ -613,6 +654,20 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Local Date String Helpers (Avoids UTC offset issues)
+        function getLocalDateString(d = new Date()) {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function getYesterdayDateString() {
+            const d = new Date();
+            d.setDate(d.getDate() - 1);
+            return getLocalDateString(d);
+        }
 
         let activePhotoList = [];
         let activeSelectedIndex = 0;
@@ -634,6 +689,18 @@
         let resolveGlobalPhotosReady;
         const globalPhotosReadyPromise = new Promise(resolve => { resolveGlobalPhotosReady = resolve; });
         let unsubscribeSettings = null;
+
+        function showToast(msg) {
+            const toast = document.getElementById('toastMessage');
+            const toastText = document.getElementById('toastText');
+            if (toast && toastText) {
+                toastText.innerText = msg;
+                toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+                }, 3000);
+            }
+        }
 
         window.onload = async function() {
             const siteUrlLabelEl = document.getElementById('siteUrlLabel');
@@ -706,8 +773,6 @@
             const legacyDocRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'data', 'global_public_site_photos_v2');
 
             (async () => {
-                // 예전 방식(문서 1개에 전부 저장)으로 남아있는 데이터가 있으면,
-                // 문서 2개(준공대지/보관함)로 나누어 자동 이전합니다. 용량 제한 문제를 근본적으로 없애기 위함입니다.
                 try {
                     const [sheetSnap, archiveSnap, legacySnap] = await Promise.all([
                         getDoc(sheetDocRef), getDoc(archiveDocRef), getDoc(legacyDocRef)
@@ -753,8 +818,6 @@
         async function saveGlobalPublicPhotosToCloud() {
             localStorage.setItem('smart_construction_global_public_photos', JSON.stringify({ archive: archiveList, sheet: sheetPhotoList }));
             if (!db) return;
-            // 클라우드에서 기존 데이터를 아직 다 불러오지 못한 상태에서 저장하면 데이터가 유실될 수 있어,
-            // 최초 1회 로딩이 끝날 때까지(최대 6초) 기다린 뒤 저장합니다.
             await Promise.race([
                 globalPhotosReadyPromise,
                 new Promise(resolve => setTimeout(resolve, 6000))
@@ -778,7 +841,7 @@
             if (archiveList.length === 0 && sheetPhotoList.length === 0) return;
             try {
                 const safeAppId = appId.replace(/[^a-zA-Z0-9_-]/g, '_');
-                const todayStr = new Date().toISOString().slice(0, 10);
+                const todayStr = getLocalDateString();
                 const sheetBackupRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'backups_sheet', todayStr);
                 const archiveBackupRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'backups_archive', todayStr);
                 await Promise.all([
@@ -856,7 +919,6 @@
             try {
                 const safeAppId = appId.replace(/[^a-zA-Z0-9_-]/g, '_');
 
-                // 복원하기 전, 현재 상태를 안전하게 별도 백업해둠
                 const preRestoreId = `복원전_${new Date().toISOString().replace(/[:.]/g, '-')}`;
                 const preSheetRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'backups_sheet', preRestoreId);
                 const preArchiveRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'backups_archive', preRestoreId);
@@ -1184,12 +1246,11 @@
                 renderAdminPhotoEditorList();
             }
 
+            if (tabId === 'tabPrintSheetView') {
+                renderPrintSheets();
+            }
+
             if (tabId === 'tabArchiveView') {
-                const todayStr = new Date().toISOString().slice(0, 10);
-                const filterInput = document.getElementById('archiveFilterDate');
-                if (filterInput && filterInput.value !== todayStr) {
-                    filterInput.value = todayStr;
-                }
                 renderArchiveList();
             }
         };
@@ -1302,7 +1363,7 @@
                         resolve({
                             id: 'photo_' + Date.now() + '_' + Math.floor(Math.random()*10000),
                             imageUrl: compressedDataUrl,
-                            date: new Date().toISOString().slice(0, 10),
+                            date: getLocalDateString(), // Uses Korean local date
                             location: `${siteSettings.siteName} 현장`,
                             description: siteSettings.defaultDesc
                         });
@@ -1312,8 +1373,6 @@
                 reader.readAsDataURL(file);
             });
 
-            // Promise.all은 결과 순서를 파일 선택 순서 그대로 보장하므로,
-            // 사진마다 압축 속도가 달라도 선택한 순서대로 등록됩니다.
             const newItems = await Promise.all(fileArray.map(processFile));
 
             const wasEmpty = activePhotoList.length === 0;
@@ -1413,7 +1472,7 @@
         };
 
         window.updateBandUnifiedText = function() {
-            let txt = `[${siteSettings.siteName} 현장일보]\n- 작성일자: ${new Date().toISOString().slice(0, 10)}\n`;
+            let txt = `[${siteSettings.siteName} 현장일보]\n- 작성일자: ${getLocalDateString()}\n`;
             activePhotoList.forEach((item, idx) => {
                 txt += `\n[사진 ${idx+1}] ${item.location}\n- 내용: ${item.description || '특이사항 없음'}\n`;
             });
@@ -1480,16 +1539,45 @@
             if (aCount) aCount.innerText = `${archiveList.length}개 항목`;
         }
 
+        window.setSheetDateFilter = function(mode) {
+            const input = document.getElementById('sheetFilterDate');
+            if (!input) return;
+            if (mode === 'all') input.value = '';
+            else if (mode === 'today') input.value = getLocalDateString();
+            else if (mode === 'yesterday') input.value = getYesterdayDateString();
+            renderPrintSheets();
+        };
+
         function renderPrintSheets() {
             const container = document.getElementById('a4SheetsContainer');
+            const dateInput = document.getElementById('sheetFilterDate');
+            const summaryEl = document.getElementById('sheetFilterSummary');
             if (!container) return;
-            if (sheetPhotoList.length === 0) {
-                container.innerHTML = `<div class="text-center py-12 text-slate-500 text-sm">등록된 준공대지 데이터가 없습니다.</div>`;
+
+            const filterDate = dateInput ? dateInput.value : '';
+
+            let filteredPhotos = sheetPhotoList.map((item, originalIndex) => ({ ...item, originalIndex }));
+            if (filterDate) {
+                filteredPhotos = filteredPhotos.filter(item => item.date === filterDate);
+            }
+
+            if (summaryEl) {
+                if (filterDate) {
+                    summaryEl.innerText = `'${filterDate}' 날짜 사진 총 ${filteredPhotos.length}장 (${Math.ceil(filteredPhotos.length / 2)}페이지)`;
+                } else {
+                    summaryEl.innerText = `전체 날짜 사진 총 ${sheetPhotoList.length}장 (${Math.ceil(sheetPhotoList.length / 2)}페이지)`;
+                }
+            }
+
+            if (filteredPhotos.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-slate-500 text-sm">
+                    ${filterDate ? `'${filterDate}' 날짜에 등록된 준공대지 사진이 없습니다.` : '등록된 준공대지 데이터가 없습니다. 첫 번째 탭에서 사진을 등록해 주세요.'}
+                </div>`;
                 return;
             }
 
             const formatYM = (dateStr) => {
-                if (!dateStr) return '26년 07월';
+                if (!dateStr) return '날짜미상';
                 const parts = dateStr.split('-');
                 if (parts.length >= 2) return `${parts[0].slice(2)}년 ${parts[1]}월`;
                 return dateStr;
@@ -1501,12 +1589,12 @@
                 return dateStr;
             };
 
-            // 날짜별로 그룹핑 (오래된 날짜 → 최근 날짜 순)
+            // Group filtered items by date
             const grouped = {};
-            sheetPhotoList.forEach((item, idx) => {
+            filteredPhotos.forEach((item) => {
                 const d = item.date || '날짜미상';
                 if (!grouped[d]) grouped[d] = [];
-                grouped[d].push({ ...item, originalIndex: idx });
+                grouped[d].push(item);
             });
             const sortedDates = Object.keys(grouped).sort();
 
@@ -1520,7 +1608,7 @@
                     <div class="w-full flex items-center gap-3 no-print date-divider" style="max-width: 210mm;">
                         <div class="h-px flex-1 bg-slate-400"></div>
                         <span class="text-xs font-black text-slate-700 bg-white px-4 py-1.5 rounded-full border-2 border-slate-400 shadow-sm">
-                            <i class="fa-solid fa-calendar-day mr-1 text-blue-600"></i> ${formatFullDate(dateKey)}
+                            <i class="fa-solid fa-calendar-day mr-1 text-blue-600"></i> ${formatFullDate(dateKey)} (${items.length}장)
                         </span>
                         <div class="h-px flex-1 bg-slate-400"></div>
                     </div>
@@ -1674,6 +1762,14 @@
             showToast("준공대지 사진이 삭제되었습니다.");
         };
 
+        window.setArchiveDateFilter = function(mode) {
+            const input = document.getElementById('archiveFilterDate');
+            if (!input) return;
+            if (mode === 'today') input.value = getLocalDateString();
+            else if (mode === 'yesterday') input.value = getYesterdayDateString();
+            renderArchiveList();
+        };
+
         window.renderArchiveList = function() {
             const grid = document.getElementById('archiveGrid');
             const filterDate = document.getElementById('archiveFilterDate').value;
@@ -1685,7 +1781,9 @@
             }
 
             if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 text-xs bg-white rounded-2xl border border-slate-200">보관된 항목이 없습니다. (사진을 등록하고 클라우드 동기화 또는 준공대지 반영을 진행해 주세요.)</div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 text-xs bg-white rounded-2xl border border-slate-200">
+                    ${filterDate ? `'${filterDate}' 날짜에 보관된 사진이 없습니다.` : '보관된 항목이 없습니다. (사진을 등록하고 클라우드 동기화 또는 준공대지 반영을 진행해 주세요.)'}
+                </div>`;
                 return;
             }
 
@@ -1770,7 +1868,7 @@
 
         window.downloadSinglePortfolioImage = async function() {
             const filterInput = document.getElementById('archiveFilterDate');
-            const targetDate = (filterInput && filterInput.value) || new Date().toISOString().slice(0, 10);
+            const targetDate = (filterInput && filterInput.value) || getLocalDateString();
             const todaysPhotos = archiveList.filter(item => item.date === targetDate);
 
             if (todaysPhotos.length === 0) {
@@ -1808,117 +1906,97 @@
             }
         };
 
+        window.setAdminDateFilter = function(mode) {
+            const input = document.getElementById('adminFilterDate');
+            if (!input) return;
+            if (mode === 'all') input.value = '';
+            else if (mode === 'today') input.value = getLocalDateString();
+            else if (mode === 'yesterday') input.value = getYesterdayDateString();
+            renderAdminPhotoEditorList();
+        };
+
         window.renderAdminPhotoEditorList = function() {
             const container = document.getElementById('adminPhotoEditorList');
             const badge = document.getElementById('adminPhotoCountBadge');
+            const dateInput = document.getElementById('adminFilterDate');
+            const summaryEl = document.getElementById('adminFilterSummary');
             if (!container) return;
-            if (badge) badge.innerText = `${sheetPhotoList.length}장 등록됨`;
 
-            if (sheetPhotoList.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">등록된 준공대지/보관함 사진이 없습니다.</div>`;
+            const filterDate = dateInput ? dateInput.value : '';
+
+            let filtered = sheetPhotoList.map((item, originalIndex) => ({ ...item, originalIndex }));
+            if (filterDate) {
+                filtered = filtered.filter(item => item.date === filterDate);
+            }
+
+            if (badge) badge.innerText = `${sheetPhotoList.length}장 등록됨`;
+            if (summaryEl) {
+                if (filterDate) summaryEl.innerText = `'${filterDate}' 날짜 사진 (${filtered.length}장)`;
+                else summaryEl.innerText = `전체 날짜 사진 (${sheetPhotoList.length}장)`;
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">
+                    ${filterDate ? `'${filterDate}' 날짜에 등록된 준공대지 사진이 없습니다.` : '등록된 준공대지/보관함 사진이 없습니다.'}
+                </div>`;
                 return;
             }
 
-            container.innerHTML = sheetPhotoList.map((item, idx) => `
+            container.innerHTML = filtered.map((item) => `
                 <div class="bg-white p-3 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center gap-4">
                     <div class="w-16 h-16 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
                         <img src="${item.imageUrl}" class="w-full h-full object-cover">
                     </div>
                     <div class="flex-1 w-full space-y-2">
-                        <div class="flex flex-wrap justify-between items-center text-xs">
-                            <span class="font-bold text-slate-700">#${idx+1} 사진</span>
-                            <div class="flex items-center gap-1">
-                                <label class="text-[11px] text-slate-500 font-bold">촬영일:</label>
-                                <input type="date" id="adminPhotoDate_${idx}" value="${item.date || new Date().toISOString().slice(0, 10)}" class="px-2 py-1 border border-slate-300 rounded-lg text-xs">
-                            </div>
+                        <div class="flex flex-wrap justify-between items-center text-xs gap-2">
+                            <span class="font-bold text-slate-800">촬영일: ${item.date}</span>
+                            <span class="text-[11px] text-slate-400">#${item.originalIndex + 1}번째 사진</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <input type="text" id="adminPhotoDesc_${idx}" value="${item.description || ''}" placeholder="작업 내용을 입력하세요" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                            <button type="button" onclick="saveAdminPhotoEdit(${idx})" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs whitespace-nowrap shadow transition">
-                                수정저장
-                            </button>
-                            <button type="button" onclick="deleteAdminPhoto(${idx})" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs whitespace-nowrap shadow transition">
-                                삭제
-                            </button>
-                        </div>
+                        <input type="text" value="${item.description || ''}" onchange="updateAdminPhotoDesc(${item.originalIndex}, this.value)" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none" placeholder="작업 설명 수정">
                     </div>
+                    <button onclick="deleteSheetPhotoIndex(${item.originalIndex})" class="w-full sm:w-auto px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs shadow transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-trash-can"></i> 삭제
+                    </button>
                 </div>
             `).join('');
         };
 
-        window.saveAdminPhotoEdit = async function(idx) {
-            const newDate = document.getElementById(`adminPhotoDate_${idx}`).value;
-            const newDesc = document.getElementById(`adminPhotoDesc_${idx}`).value;
-
+        window.updateAdminPhotoDesc = async function(idx, newDesc) {
             if (sheetPhotoList[idx]) {
-                sheetPhotoList[idx].date = newDate;
                 sheetPhotoList[idx].description = newDesc;
+                await saveGlobalPublicPhotosToCloud();
+                renderPrintSheets();
+                showToast("사진 작업 설명이 수정되었습니다.");
             }
-            if (archiveList[idx]) {
-                archiveList[idx].date = newDate;
-                archiveList[idx].description = newDesc;
-            }
-
-            await saveGlobalPublicPhotosToCloud();
-            renderAdminPhotoEditorList();
-            showToast(`사진 #${idx+1} 내용이 수정되었습니다.`);
-        };
-
-        window.deleteAdminPhoto = async function(idx) {
-            if (!window.confirm(`정말로 #${idx+1} 사진을 준공대지와 보관함에서 삭제하시겠습니까?`)) return;
-
-            if (sheetPhotoList.length > idx) sheetPhotoList.splice(idx, 1);
-            if (archiveList.length > idx) archiveList.splice(idx, 1);
-
-            await saveGlobalPublicPhotosToCloud();
-            renderAdminPhotoEditorList();
-            renderPrintSheets();
-            renderArchiveList();
-            showToast(`사진 #${idx+1}이 성공적으로 삭제되었습니다.`);
         };
 
         window.renderAdminUserTable = function() {
             const tbody = document.getElementById('adminUserTableBody');
             const badge = document.getElementById('adminUserCountBadge');
-            if (!tbody) return;
             if (badge) badge.innerText = `${registeredUsers.length}명 등록됨`;
+            if (!tbody) return;
 
-            tbody.innerHTML = registeredUsers.map((u, idx) => `
+            tbody.innerHTML = registeredUsers.map((u, i) => `
                 <tr class="border-b hover:bg-slate-50">
                     <td class="p-3 font-bold text-slate-900">${u.userId}</td>
                     <td class="p-3 text-slate-700">${u.name}</td>
                     <td class="p-3 font-mono text-slate-500">${u.password}</td>
-                    <td class="p-3 text-right">
-                        ${u.userId !== 'admin' ? `
-                            <button onclick="deleteSystemUser('${u.userId}')" class="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[11px] font-bold shadow transition">
-                                계정 삭제
-                            </button>
-                        ` : '<span class="text-slate-400 font-bold">마스터 계정</span>'}
+                    <td class="p-3 text-right space-x-1">
+                        <button onclick="deleteAdminUser(${i})" class="px-2.5 py-1 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold rounded-lg text-[11px] transition">
+                            계정 삭제
+                        </button>
                     </td>
                 </tr>
             `).join('');
         };
 
-        window.deleteSystemUser = async function(targetUserId) {
-            if (!window.confirm(`[${targetUserId}] 계정을 정말로 삭제하시겠습니까?`)) return;
-            registeredUsers = registeredUsers.filter(u => u.userId !== targetUserId);
+        window.deleteAdminUser = async function(idx) {
+            if (!window.confirm("해당 계정을 삭제하시겠습니까?")) return;
+            registeredUsers.splice(idx, 1);
             await saveGlobalUsersToCloud();
             renderAdminUserTable();
-            showToast(`계정(${targetUserId})이 삭제되었습니다.`);
+            showToast("계정이 삭제되었습니다.");
         };
-
-        function showToast(text) {
-            const toast = document.getElementById('toastMessage');
-            const span = document.getElementById('toastText');
-            if (!toast || !span) return;
-            span.innerText = text;
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            toast.classList.add('translate-y-0', 'opacity-100');
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
-        }
     </script>
 </body>
 </html>
