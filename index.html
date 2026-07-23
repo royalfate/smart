@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -30,6 +31,7 @@
         }
         @media screen and (max-width: 640px) {
             #a4SheetsContainer.mobile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+            #a4SheetsContainer.mobile-grid .date-divider { grid-column: 1 / -1; }
             .print-page-wrapper { position: relative; width: 100%; overflow: hidden; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); background: white; }
             .print-page-wrapper .print-page { transform-origin: top left; margin: 0 !important; box-shadow: none !important; }
         }
@@ -369,6 +371,9 @@
                         <button onclick="downloadAllSheetsAsImages()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow flex items-center gap-1.5 transition">
                             <i class="fa-solid fa-image"></i> 🖼️ 이미지(PNG)로 저장
                         </button>
+                        <button onclick="downloadAllSheetsAsPDF()" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs shadow flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-file-pdf"></i> 📄 전체 PDF로 이어붙여 저장
+                        </button>
                         <button onclick="window.print()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow flex items-center gap-1.5 transition">
                             <i class="fa-solid fa-print"></i> 🖨️ 인쇄 / PDF 저장
                         </button>
@@ -492,6 +497,28 @@
                     <i class="fa-solid fa-floppy-disk mr-1"></i> 관리자 설정 클라우드 저장
                 </button>
             </div>
+
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <h2 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left text-blue-600"></i> 백업 관리
+                        </h2>
+                        <p class="text-xs text-slate-500">저장할 때마다 그날 날짜로 자동 백업됩니다. 문제가 생기면 원하는 날짜로 복원할 수 있습니다.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="manualBackupNow()" class="px-3 py-2 bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold rounded-lg flex items-center gap-1.5">
+                            <i class="fa-solid fa-floppy-disk"></i> 지금 백업하기
+                        </button>
+                        <button onclick="loadBackupList()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5">
+                            <i class="fa-solid fa-rotate"></i> 백업 목록 새로고침
+                        </button>
+                    </div>
+                </div>
+                <div id="backupListContainer" class="space-y-2">
+                    <div class="text-center text-xs text-slate-400 py-4">"백업 목록 새로고침"을 눌러 불러오세요.</div>
+                </div>
+            </div>
         </section>
 
         <!-- 품질 하위 탭 (빈 페이지 - 추후 채움) -->
@@ -585,7 +612,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         let activePhotoList = [];
         let activeSelectedIndex = 0;
@@ -604,7 +631,8 @@
         let db, auth, appId;
         let unsubscribeUsers = null;
         let unsubscribeGlobalPhotos = null;
-        let globalPhotosSynced = false;
+        let resolveGlobalPhotosReady;
+        const globalPhotosReadyPromise = new Promise(resolve => { resolveGlobalPhotosReady = resolve; });
         let unsubscribeSettings = null;
 
         window.onload = async function() {
@@ -667,7 +695,10 @@
             renderArchiveList();
             renderPrintSheets();
 
-            if (!db) return;
+            if (!db) {
+                resolveGlobalPhotosReady();
+                return;
+            }
 
             const safeAppId = appId.replace(/[^a-zA-Z0-9_-]/g, '_');
             const globalPhotosRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'data', 'global_public_site_photos_v2');
@@ -685,23 +716,125 @@
                 } else {
                     setDoc(globalPhotosRef, { archive: archiveList, sheet: sheetPhotoList }).catch(() => {});
                 }
-                globalPhotosSynced = true;
-            }, (err) => { globalPhotosSynced = true; });
+                resolveGlobalPhotosReady();
+            }, (err) => { resolveGlobalPhotosReady(); });
         }
 
         async function saveGlobalPublicPhotosToCloud() {
             localStorage.setItem('smart_construction_global_public_photos', JSON.stringify({ archive: archiveList, sheet: sheetPhotoList }));
             if (!db) return;
-            if (!globalPhotosSynced) {
-                showToast("⏳ 클라우드 데이터를 아직 불러오는 중입니다. 잠시 후 다시 시도해 주세요.");
-                return;
-            }
+            // 클라우드에서 기존 데이터를 아직 다 불러오지 못한 상태에서 저장하면 데이터가 유실될 수 있어,
+            // 최초 1회 로딩이 끝날 때까지(최대 6초) 기다린 뒤 저장합니다.
+            await Promise.race([
+                globalPhotosReadyPromise,
+                new Promise(resolve => setTimeout(resolve, 6000))
+            ]);
             try {
                 const safeAppId = appId.replace(/[^a-zA-Z0-9_-]/g, '_');
                 const globalPhotosRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'data', 'global_public_site_photos_v2');
                 await setDoc(globalPhotosRef, { archive: archiveList, sheet: sheetPhotoList });
+                createAutoBackup();
             } catch(e) {}
         }
+
+        async function createAutoBackup() {
+            if (!db) return;
+            if (archiveList.length === 0 && sheetPhotoList.length === 0) return;
+            try {
+                const safeAppId = appId.replace(/[^a-zA-Z0-9_-]/g, '_');
+                const todayStr = new Date().toISOString().slice(0, 10);
+                const backupRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'backups', todayStr);
+                await setDoc(backupRef, {
+                    archive: archiveList,
+                    sheet: sheetPhotoList,
+                    savedAt: new Date().toISOString()
+                });
+            } catch(e) {}
+        }
+
+        window.manualBackupNow = async function() {
+            if (!db) {
+                showToast("클라우드에 연결되어 있지 않아 백업할 수 없습니다.");
+                return;
+            }
+            await createAutoBackup();
+            showToast("💾 지금 상태로 백업을 저장했습니다.");
+        };
+
+        window.loadBackupList = async function() {
+            const listEl = document.getElementById('backupListContainer');
+            if (!db) {
+                listEl.innerHTML = `<div class="text-center text-xs text-rose-500 py-4">클라우드에 연결되어 있지 않습니다.</div>`;
+                return;
+            }
+            listEl.innerHTML = `<div class="text-center text-xs text-slate-400 py-4">불러오는 중...</div>`;
+            try {
+                const safeAppId = appId.replace(/[^a-zA-Z0-9_-]/g, '_');
+                const backupsCol = collection(db, 'artifacts', `${safeAppId}_public_data`, 'backups');
+                const snap = await getDocs(backupsCol);
+                const backups = [];
+                snap.forEach(d => backups.push({ id: d.id, ...d.data() }));
+                backups.sort((a, b) => (b.id || '').localeCompare(a.id || ''));
+
+                if (backups.length === 0) {
+                    listEl.innerHTML = `<div class="text-center text-xs text-slate-400 py-4">저장된 백업이 아직 없습니다.</div>`;
+                    return;
+                }
+                listEl.innerHTML = backups.map(b => {
+                    const count = (b.archive ? b.archive.length : 0) + (b.sheet ? b.sheet.length : 0);
+                    const savedAtStr = b.savedAt ? new Date(b.savedAt).toLocaleString() : '';
+                    return `
+                        <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+                            <div>
+                                <p class="text-xs font-bold text-slate-800">${b.id}</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">사진 ${count}장 · 마지막 저장: ${savedAtStr}</p>
+                            </div>
+                            <button onclick="restoreFromBackup('${b.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5">
+                                <i class="fa-solid fa-clock-rotate-left"></i> 이 시점으로 복원
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            } catch(e) {
+                listEl.innerHTML = `<div class="text-center text-xs text-rose-500 py-4">백업 목록을 불러오지 못했습니다.</div>`;
+            }
+        };
+
+        window.restoreFromBackup = async function(backupId) {
+            if (!db) return;
+            if (!window.confirm(`'${backupId}' 백업 시점으로 복원하시겠습니까?\n\n현재 데이터는 복원 전 상태로 별도 백업된 후 교체됩니다.`)) return;
+            try {
+                const safeAppId = appId.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+                // 복원하기 전, 현재 상태를 안전하게 별도 백업해둠
+                const preRestoreId = `복원전_${new Date().toISOString().replace(/[:.]/g, '-')}`;
+                const preRestoreRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'backups', preRestoreId);
+                await setDoc(preRestoreRef, { archive: archiveList, sheet: sheetPhotoList, savedAt: new Date().toISOString() });
+
+                const backupRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'backups', backupId);
+                const snap = await getDoc(backupRef);
+                if (!snap.exists()) {
+                    showToast("해당 백업을 찾을 수 없습니다.");
+                    return;
+                }
+                const data = snap.data();
+                archiveList = data.archive || [];
+                sheetPhotoList = data.sheet || [];
+
+                localStorage.setItem('smart_construction_global_public_photos', JSON.stringify({ archive: archiveList, sheet: sheetPhotoList }));
+                const globalPhotosRef = doc(db, 'artifacts', `${safeAppId}_public_data`, 'data', 'global_public_site_photos_v2');
+                await setDoc(globalPhotosRef, { archive: archiveList, sheet: sheetPhotoList });
+
+                updateDashboardCounts();
+                renderArchiveList();
+                renderPrintSheets();
+                if (isAdminMode) renderAdminPhotoEditorList();
+                loadBackupList();
+                showToast(`✅ '${backupId}' 시점으로 복원 완료!`);
+            } catch(e) {
+                showToast("복원 중 오류가 발생했습니다.");
+            }
+        };
 
         function setupGlobalSettingsSync() {
             const defaultSettings = {
@@ -1288,74 +1421,107 @@
                 return;
             }
 
-            let html = '';
-            for (let i = 0; i < sheetPhotoList.length; i += 2) {
-                const p1 = sheetPhotoList[i];
-                const p2 = sheetPhotoList[i+1];
-                const pageIndex = Math.floor(i / 2) + 1;
+            const formatYM = (dateStr) => {
+                if (!dateStr) return '26년 07월';
+                const parts = dateStr.split('-');
+                if (parts.length >= 2) return `${parts[0].slice(2)}년 ${parts[1]}월`;
+                return dateStr;
+            };
+            const formatFullDate = (dateStr) => {
+                if (!dateStr || dateStr === '날짜미상') return '날짜 미상';
+                const parts = dateStr.split('-');
+                if (parts.length === 3) return `${parts[0]}년 ${parts[1]}월 ${parts[2]}일`;
+                return dateStr;
+            };
 
-                const formatYM = (dateStr) => {
-                    if (!dateStr) return '26년 07월';
-                    const parts = dateStr.split('-');
-                    if (parts.length >= 2) return `${parts[0].slice(2)}년 ${parts[1]}월`;
-                    return dateStr;
-                };
+            // 날짜별로 그룹핑 (오래된 날짜 → 최근 날짜 순)
+            const grouped = {};
+            sheetPhotoList.forEach((item, idx) => {
+                const d = item.date || '날짜미상';
+                if (!grouped[d]) grouped[d] = [];
+                grouped[d].push({ ...item, originalIndex: idx });
+            });
+            const sortedDates = Object.keys(grouped).sort();
+
+            let html = '';
+            let pageIndex = 0;
+
+            sortedDates.forEach(dateKey => {
+                const items = grouped[dateKey];
 
                 html += `
-                    <div class="print-page-wrapper">
-                    <div id="printSheetPage_${pageIndex}" class="print-page bg-white shadow-2xl rounded-xl border border-slate-400 p-8 flex flex-col justify-between relative" style="width: 210mm; min-height: 297mm; font-family: 'Inter', sans-serif;">
-                        <table class="w-full border-collapse border-2 border-black text-center mb-4">
-                            <thead>
-                                <tr>
-                                    <th class="border-2 border-black py-3 bg-white text-black text-xl font-black tracking-widest">
-                                        ${siteSettings.sheetTitle} (페이지 ${pageIndex})
-                                    </th>
-                                </tr>
-                            </thead>
-                        </table>
-
-                        <div class="border-2 border-black mb-6 flex flex-col relative group">
-                            <button onclick="deleteSheetPhotoIndex(${i})" class="absolute top-2 right-2 bg-rose-600 hover:bg-rose-700 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-lg z-10 no-print" title="이 사진 삭제">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                            <div class="w-full bg-white p-3 flex items-center justify-center overflow-hidden" style="height: 360px;">
-                                <img src="${p1.imageUrl}" class="w-full h-full object-cover">
-                            </div>
-                            <table class="w-full border-t-2 border-black border-collapse text-xs">
-                                <tr>
-                                    <td class="border-r-2 border-black bg-slate-100 py-2.5 px-3 font-bold text-center w-20 text-slate-900">촬영일</td>
-                                    <td class="border-r-2 border-black py-2.5 px-3 text-center font-medium w-36 text-slate-900">${formatYM(p1.date)}</td>
-                                    <td class="border-r-2 border-black bg-slate-100 py-2.5 px-3 font-bold text-center w-20 text-slate-900">내용</td>
-                                    <td class="py-2.5 px-4 font-bold text-left text-slate-900">${p1.description || p1.location}</td>
-                                </tr>
-                            </table>
-                        </div>
-
-                        ${p2 ? `
-                        <div class="border-2 border-black flex flex-col relative group">
-                            <button onclick="deleteSheetPhotoIndex(${i+1})" class="absolute top-2 right-2 bg-rose-600 hover:bg-rose-700 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-lg z-10 no-print" title="이 사진 삭제">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                            <div class="w-full bg-white p-3 flex items-center justify-center overflow-hidden" style="height: 360px;">
-                                <img src="${p2.imageUrl}" class="w-full h-full object-cover">
-                            </div>
-                            <table class="w-full border-t-2 border-black border-collapse text-xs">
-                                <tr>
-                                    <td class="border-r-2 border-black bg-slate-100 py-2.5 px-3 font-bold text-center w-20 text-slate-900">촬영일</td>
-                                    <td class="border-r-2 border-black py-2.5 px-3 text-center font-medium w-36 text-slate-900">${formatYM(p2.date)}</td>
-                                    <td class="border-r-2 border-black bg-slate-100 py-2.5 px-3 font-bold text-center w-20 text-slate-900">내용</td>
-                                    <td class="py-2.5 px-4 font-bold text-left text-slate-900">${p2.description || p2.location}</td>
-                                </tr>
-                            </table>
-                        </div>` : ''}
-
-                        <div class="text-right text-[10px] text-slate-400 pt-4 border-t">
-                            ${siteSettings.siteName} 스마트건설관리 시스템
-                        </div>
-                    </div>
+                    <div class="w-full flex items-center gap-3 no-print date-divider" style="max-width: 210mm;">
+                        <div class="h-px flex-1 bg-slate-400"></div>
+                        <span class="text-xs font-black text-slate-700 bg-white px-4 py-1.5 rounded-full border-2 border-slate-400 shadow-sm">
+                            <i class="fa-solid fa-calendar-day mr-1 text-blue-600"></i> ${formatFullDate(dateKey)}
+                        </span>
+                        <div class="h-px flex-1 bg-slate-400"></div>
                     </div>
                 `;
-            }
+
+                for (let i = 0; i < items.length; i += 2) {
+                    const p1 = items[i];
+                    const p2 = items[i+1];
+                    pageIndex++;
+
+                    html += `
+                        <div class="print-page-wrapper">
+                        <div id="printSheetPage_${pageIndex}" class="print-page bg-white shadow-2xl rounded-xl border border-slate-400 p-8 flex flex-col justify-between relative" style="width: 210mm; min-height: 297mm; font-family: 'Inter', sans-serif;">
+                            <table class="w-full border-collapse border-2 border-black text-center mb-1">
+                                <thead>
+                                    <tr>
+                                        <th class="border-2 border-black py-3 bg-white text-black text-xl font-black tracking-widest">
+                                            ${siteSettings.sheetTitle} (페이지 ${pageIndex})
+                                        </th>
+                                    </tr>
+                                </thead>
+                            </table>
+                            <div class="text-center text-xs font-bold text-slate-500 mb-4">${formatFullDate(dateKey)} 촬영분</div>
+
+                            <div class="border-2 border-black mb-6 flex flex-col relative group">
+                                <button onclick="deleteSheetPhotoIndex(${p1.originalIndex})" class="absolute top-2 right-2 bg-rose-600 hover:bg-rose-700 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-lg z-10 no-print" title="이 사진 삭제">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                                <div class="w-full bg-white p-3 flex items-center justify-center overflow-hidden" style="height: 360px;">
+                                    <img src="${p1.imageUrl}" class="w-full h-full object-cover">
+                                </div>
+                                <table class="w-full border-t-2 border-black border-collapse text-xs">
+                                    <tr>
+                                        <td class="border-r-2 border-black bg-slate-100 py-2.5 px-3 font-bold text-center w-20 text-slate-900">촬영일</td>
+                                        <td class="border-r-2 border-black py-2.5 px-3 text-center font-medium w-36 text-slate-900">${formatYM(p1.date)}</td>
+                                        <td class="border-r-2 border-black bg-slate-100 py-2.5 px-3 font-bold text-center w-20 text-slate-900">내용</td>
+                                        <td class="py-2.5 px-4 font-bold text-left text-slate-900">${p1.description || p1.location}</td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            ${p2 ? `
+                            <div class="border-2 border-black flex flex-col relative group">
+                                <button onclick="deleteSheetPhotoIndex(${p2.originalIndex})" class="absolute top-2 right-2 bg-rose-600 hover:bg-rose-700 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-lg z-10 no-print" title="이 사진 삭제">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                                <div class="w-full bg-white p-3 flex items-center justify-center overflow-hidden" style="height: 360px;">
+                                    <img src="${p2.imageUrl}" class="w-full h-full object-cover">
+                                </div>
+                                <table class="w-full border-t-2 border-black border-collapse text-xs">
+                                    <tr>
+                                        <td class="border-r-2 border-black bg-slate-100 py-2.5 px-3 font-bold text-center w-20 text-slate-900">촬영일</td>
+                                        <td class="border-r-2 border-black py-2.5 px-3 text-center font-medium w-36 text-slate-900">${formatYM(p2.date)}</td>
+                                        <td class="border-r-2 border-black bg-slate-100 py-2.5 px-3 font-bold text-center w-20 text-slate-900">내용</td>
+                                        <td class="py-2.5 px-4 font-bold text-left text-slate-900">${p2.description || p2.location}</td>
+                                    </tr>
+                                </table>
+                            </div>` : ''}
+
+                            <div class="text-right text-[10px] text-slate-400 pt-4 border-t">
+                                ${siteSettings.siteName} 스마트건설관리 시스템
+                            </div>
+                        </div>
+                        </div>
+                    `;
+                }
+            });
+
             container.innerHTML = html;
             applyMobilePrintScale();
         }
@@ -1375,6 +1541,64 @@
                 applyMobilePrintScale();
             }
         });
+
+        window.downloadAllSheetsAsImages = async function() {
+            if (sheetPhotoList.length === 0) {
+                showToast("저장할 준공대지가 없습니다.");
+                return;
+            }
+            if (typeof html2canvas === 'undefined' || typeof JSZip === 'undefined') {
+                showToast("이미지 저장 기능을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.");
+                return;
+            }
+            showToast("🖼️ 페이지를 이미지로 변환하는 중입니다...");
+            const pages = document.querySelectorAll('#a4SheetsContainer .print-page');
+            pages.forEach(p => p.style.transform = 'none');
+            try {
+                const zip = new JSZip();
+                for (let i = 0; i < pages.length; i++) {
+                    const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true });
+                    const base64 = canvas.toDataURL('image/png').split(',')[1];
+                    zip.file(`준공대지_페이지${i+1}.png`, base64, { base64: true });
+                }
+                const blob = await zip.generateAsync({ type: 'blob' });
+                const link = document.createElement('a');
+                link.download = `${siteSettings.siteName}_준공대지_이미지.zip`;
+                link.href = URL.createObjectURL(blob);
+                link.click();
+                showToast("✅ 이미지(zip) 저장 완료!");
+            } finally {
+                applyMobilePrintScale();
+            }
+        };
+
+        window.downloadAllSheetsAsPDF = async function() {
+            if (sheetPhotoList.length === 0) {
+                showToast("PDF로 만들 사진이 없습니다.");
+                return;
+            }
+            if (typeof window.jspdf === 'undefined' || typeof html2canvas === 'undefined') {
+                showToast("PDF 생성 기능을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.");
+                return;
+            }
+            showToast("📄 전체 준공대지를 하나의 PDF로 이어붙이는 중입니다...");
+            const pages = document.querySelectorAll('#a4SheetsContainer .print-page');
+            pages.forEach(p => p.style.transform = 'none');
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                for (let i = 0; i < pages.length; i++) {
+                    const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true });
+                    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+                    if (i > 0) pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+                }
+                pdf.save(`${siteSettings.siteName}_준공사진대지_전체.pdf`);
+                showToast("✅ 전체 PDF 저장 완료!");
+            } finally {
+                applyMobilePrintScale();
+            }
+        };
 
         window.deleteSheetPhotoIndex = async function(idx) {
             if (!window.confirm(`정말로 준공대지 #${idx+1} 사진을 삭제하시겠습니까?`)) return;
