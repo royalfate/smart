@@ -28,6 +28,8 @@
             header, nav, button, .no-print { display: none !important; }
             .print-page { margin: 0; box-shadow: none; width: 100%; min-height: auto; }
             #tabPrintSheetView { display: block !important; }
+            #tabScheduleView.schedule-printing { display: block !important; }
+            #tabScheduleView.schedule-printing .schedule-print-area { box-shadow: none; border: 0; }
         }
         @media screen and (max-width: 640px) {
             #a4SheetsContainer.mobile-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
@@ -163,69 +165,61 @@
     <main id="mainContentArea" class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6 hidden">
         <!-- Tab 0: Home / Main Dashboard -->
         <section id="tabHomeView" class="space-y-6">
-            <div class="bg-gradient-to-br from-blue-900 to-slate-900 text-white p-6 sm:p-10 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="bg-gradient-to-br from-blue-900 to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl">
                 <div class="space-y-3">
-                    <span class="bg-blue-600/40 text-blue-300 border border-blue-400/30 px-3 py-1 rounded-full text-xs font-bold inline-block">
-                        <i class="fa-solid fa-cloud-circle-check mr-1 text-emerald-400"></i> 클라우드 실시간 공용 사진 DB 동기화 활성화됨
-                    </span>
+                    <span class="text-blue-300 text-xs font-bold">SMART CONSTRUCTION MANAGEMENT</span>
                     <h2 id="welcomeUserTitle" class="text-2xl sm:text-3xl font-black tracking-tight">NH농협은행 강릉 금융센터 신축공사 현장일보</h2>
-                    <p class="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
-                        PC에서 사진을 올리거나 스마트폰에서 촬영하면 모든 기기에서 실시간으로 동일한 사진과 대지가 동기화됩니다.
-                    </p>
-                </div>
-                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                    <button onclick="selectSubTab('photo','tabDailyView')" class="px-6 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
-                        <i class="fa-solid fa-camera-retro"></i> 현장 사진 촬영 및 대지 생성
-                    </button>
+                    <p class="text-xs sm:text-sm text-slate-300">오늘 필요한 현장 업무와 안전정보를 한눈에 확인하세요.</p>
                 </div>
             </div>
 
-            <!-- Dashboard Quick Stats -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
-                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-                        <i class="fa-solid fa-images"></i>
-                    </div>
-                    <div>
-                        <span class="text-xs text-slate-500 font-medium block">공용 등록된 총 사진 수</span>
-                        <span id="dashPhotoCount" class="text-xl font-black text-slate-900">0장</span>
-                    </div>
-                </div>
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
-                    <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-                        <i class="fa-solid fa-file-shield"></i>
-                    </div>
-                    <div>
-                        <span class="text-xs text-slate-500 font-medium block">공식 준공대지 매칭</span>
-                        <span id="dashSheetCount" class="text-xl font-black text-slate-900">0페이지</span>
-                    </div>
-                </div>
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
-                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                    </div>
-                    <div>
-                        <span class="text-xs text-slate-500 font-medium block">클라우드 보관함</span>
-                        <span id="dashArchiveCount" class="text-xl font-black text-slate-900">0개 항목</span>
-                    </div>
-                </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <button onclick="selectSubTab('photo','tabDailyView')" class="text-left bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-md transition">
+                    <i class="fa-solid fa-camera-retro text-xl text-blue-600"></i>
+                    <h3 class="font-black text-slate-900 mt-3">현장사진</h3>
+                    <p class="text-[11px] text-slate-500 mt-1">촬영·등록·대지 생성</p>
+                </button>
+                <button onclick="selectSubTab('quality','tabMaterialApprovalView')" class="text-left bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 hover:border-amber-400 hover:shadow-md transition">
+                    <i class="fa-solid fa-clipboard-check text-xl text-amber-600"></i>
+                    <h3 class="font-black text-slate-900 mt-3">품질관리</h3>
+                    <p class="text-[11px] text-slate-500 mt-1">자재공급원 승인</p>
+                </button>
+                <button onclick="selectSubTab('drawing','tabDrawingArchitectureView')" class="text-left bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 hover:border-violet-400 hover:shadow-md transition">
+                    <i class="fa-solid fa-compass-drafting text-xl text-violet-600"></i>
+                    <h3 class="font-black text-slate-900 mt-3">도면보기</h3>
+                    <p class="text-[11px] text-slate-500 mt-1">건축도면 바로 열기</p>
+                </button>
+                <button onclick="selectSubTab('schedule','tabScheduleView')" class="text-left bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition">
+                    <i class="fa-solid fa-chart-gantt text-xl text-emerald-600"></i>
+                    <h3 class="font-black text-slate-900 mt-3">공정표 검토</h3>
+                    <p class="text-[11px] text-slate-500 mt-1">보할·예정·실시 확인</p>
+                </button>
             </div>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <button onclick="selectSubTab('drawing','tabDrawingArchitectureView')" class="text-left bg-white p-5 rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-md transition">
-                    <span class="text-[11px] font-bold text-blue-600">설계도서</span>
-                    <h3 class="font-black text-slate-900 mt-1">건축·구조 도면 바로보기</h3>
-                    <p class="text-xs text-slate-500 mt-2">현장에서 휴대폰으로 확대·축소하며 PDF 도면을 확인합니다.</p>
-                </button>
-                <button onclick="selectSubTab('schedule','tabScheduleView')" class="text-left bg-white p-5 rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition">
-                    <span class="text-[11px] font-bold text-emerald-600">통합 WBS</span>
-                    <h3 class="font-black text-slate-900 mt-1">공정표·간트차트</h3>
-                    <p class="text-xs text-slate-500 mt-2">주요 공정의 기간과 선후행 관계를 한눈에 확인합니다.</p>
-                </button>
-                <button onclick="selectSubTab('quality','tabMaterialApprovalView')" class="text-left bg-white p-5 rounded-2xl border border-slate-200 hover:border-amber-400 hover:shadow-md transition">
-                    <span class="text-[11px] font-bold text-amber-600">품질관리</span>
-                    <h3 class="font-black text-slate-900 mt-1">승인·검수·시험</h3>
-                    <p class="text-xs text-slate-500 mt-2">공정과 연결되는 품질관리 기록의 기본 공간입니다.</p>
-                </button>
+
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+                <div class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                    <div class="flex items-center justify-between gap-3 mb-4">
+                        <div><p class="text-[11px] font-bold text-blue-600">TODAY</p><h3 class="font-black text-slate-900">오늘의 주요 일정</h3></div>
+                        <button onclick="openScheduleManager()" class="admin-only hidden px-3 py-2 rounded-lg bg-slate-900 text-white text-[11px] font-bold"><i class="fa-solid fa-plus mr-1"></i>일정관리</button>
+                    </div>
+                    <div id="homeScheduleList" class="space-y-2"></div>
+                </div>
+                <div class="lg:col-span-2 bg-gradient-to-br from-sky-600 to-blue-800 text-white rounded-2xl shadow-sm p-5">
+                    <div class="flex justify-between items-start gap-3">
+                        <div><p id="weatherDate" class="text-xs text-blue-100"></p><h3 class="font-black text-lg mt-1">강릉 현장 기상</h3></div>
+                        <i id="weatherIcon" class="fa-solid fa-cloud-sun text-3xl text-amber-300"></i>
+                    </div>
+                    <div id="weatherSummary" class="mt-4 text-2xl font-black">기상정보 확인 중</div>
+                    <div class="grid grid-cols-3 gap-2 mt-4 text-center">
+                        <div class="bg-white/10 rounded-xl p-2"><span class="block text-[10px] text-blue-100">강수확률</span><strong id="weatherRain" class="text-sm">-</strong></div>
+                        <div class="bg-white/10 rounded-xl p-2"><span class="block text-[10px] text-blue-100">습도</span><strong id="weatherHumidity" class="text-sm">-</strong></div>
+                        <div class="bg-white/10 rounded-xl p-2"><span class="block text-[10px] text-blue-100">풍속</span><strong id="weatherWind" class="text-sm">-</strong></div>
+                    </div>
+                    <div class="mt-4 bg-amber-300/15 border border-amber-200/30 rounded-xl p-3">
+                        <p class="text-[10px] font-bold text-amber-200">오늘의 작업 주의사항</p>
+                        <p id="weatherAdvice" class="text-xs mt-1 leading-relaxed">기상정보를 확인하고 일반 안전수칙을 준수하세요.</p>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -234,26 +228,33 @@
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                        <p class="text-[11px] font-bold text-emerald-600">WBS 1차 초안</p>
-                        <h2 class="text-xl font-black text-slate-900">통합 공정표</h2>
-                        <p class="text-xs text-slate-500 mt-1">일정을 수정하면 브라우저에 저장되며, 후속 공정은 자동으로 연결됩니다.</p>
+                        <p class="text-[11px] font-bold text-emerald-600">STANDARD BARCHART · 2026.07.27 ~ 2027.08.16</p>
+                        <h2 class="text-xl font-black text-slate-900">표준 보할 공정표</h2>
+                        <p class="text-xs text-slate-500 mt-1">계약내역서 직접공사비 기준 · 예정/실시 누계 및 계획 대비 증감</p>
                     </div>
-                    <button onclick="resetSchedule()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700"><i class="fa-solid fa-rotate-left mr-1"></i>초기 일정 복원</button>
+                    <div class="flex gap-2">
+                        <button onclick="printSchedule()" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold"><i class="fa-solid fa-print mr-1"></i>A4 가로 인쇄</button>
+                        <button onclick="resetSchedule()" class="admin-only hidden px-4 py-2 rounded-xl bg-slate-100 text-xs font-bold text-slate-700"><i class="fa-solid fa-rotate-left mr-1"></i>초기화</button>
+                    </div>
                 </div>
             </div>
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-white border rounded-xl p-3"><span class="text-[10px] text-slate-500">기준 직접공사비</span><strong id="scheduleTotalCost" class="block text-sm mt-1"></strong></div>
+                <div class="bg-white border rounded-xl p-3"><span class="text-[10px] text-slate-500">전체 예정 공정률</span><strong id="schedulePlanTotal" class="block text-sm mt-1 text-blue-600"></strong></div>
+                <div class="bg-white border rounded-xl p-3"><span class="text-[10px] text-slate-500">전체 실시 공정률</span><strong id="scheduleActualTotal" class="block text-sm mt-1 text-emerald-600"></strong></div>
+                <div class="bg-white border rounded-xl p-3"><span class="text-[10px] text-slate-500">계획 대비</span><strong id="scheduleVariance" class="block text-sm mt-1"></strong></div>
+            </div>
+            <div class="schedule-print-area bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto custom-scrollbar">
-                    <div class="min-w-[900px]">
-                        <div class="grid grid-cols-[230px_130px_130px_1fr] bg-slate-900 text-white text-xs font-bold">
-                            <div class="p-3">작업명</div><div class="p-3">시작일</div><div class="p-3">종료일</div><div class="p-3">간트 (12주)</div>
+                    <div class="min-w-[1280px]">
+                        <div class="grid grid-cols-[210px_120px_75px_115px_115px_70px_70px_70px_1fr] bg-slate-900 text-white text-[11px] font-bold">
+                            <div class="p-3">WBS / 공종</div><div class="p-3">공사비</div><div class="p-3">보할</div><div class="p-3">시작일</div><div class="p-3">종료일</div><div class="p-3">예정</div><div class="p-3">실시</div><div class="p-3">증감</div><div class="p-3">월별 간트</div>
                         </div>
                         <div id="scheduleRows"></div>
                     </div>
                 </div>
             </div>
-            <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-xs text-blue-900">
-                <i class="fa-solid fa-circle-info mr-1"></i> 현재 버전은 주요 공정의 일정 편집과 자동 후속 이동이 작동하는 1차 골격입니다. 도면·내역서 AI 분석 후 세부 WBS로 확장됩니다.
-            </div>
+            <div id="monthlyProgressTable" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto"></div>
         </section>
 
         <!-- Tab 1: Daily View (Photo Uploader & Tree Editor) -->
@@ -490,6 +491,20 @@
                 <button onclick="exitAdminMode()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-xl text-xs font-bold border border-amber-500/30 transition">
                     일반 모드로 전환
                 </button>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 sm:gap-4">
+                <div class="bg-white p-3 sm:p-4 rounded-xl border text-center"><span class="text-[10px] text-slate-500 block">전체 사진</span><strong id="dashPhotoCount" class="text-sm sm:text-lg">0장</strong></div>
+                <div class="bg-white p-3 sm:p-4 rounded-xl border text-center"><span class="text-[10px] text-slate-500 block">준공대지 매칭</span><strong id="dashSheetCount" class="text-sm sm:text-lg">0페이지</strong></div>
+                <div class="bg-white p-3 sm:p-4 rounded-xl border text-center"><span class="text-[10px] text-slate-500 block">클라우드 보관함</span><strong id="dashArchiveCount" class="text-sm sm:text-lg">0개</strong></div>
+            </div>
+
+            <div id="adminScheduleManager" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between gap-3 border-b pb-3">
+                    <div><h3 class="font-bold text-base"><i class="fa-solid fa-calendar-check text-amber-600 mr-2"></i>주요 일정관리</h3><p class="text-xs text-slate-500 mt-1">등록한 일정은 홈 첫 화면에 날짜순으로 표시됩니다.</p></div>
+                    <button onclick="addSiteSchedule()" class="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-bold"><i class="fa-solid fa-plus mr-1"></i>일정 추가</button>
+                </div>
+                <div id="adminScheduleList" class="space-y-3"></div>
             </div>
 
             <!-- Unified Photo Manager (Deletion & Editing with Date Selector) -->
@@ -784,6 +799,8 @@
             setupGlobalSettingsSync();
             setupGlobalPublicPhotosSync();
             renderMobileWorkTree();
+            renderSiteSchedules();
+            loadGangneungWeather();
 
             isAdminMode = false;
             updateAdminButtonState();
@@ -1246,6 +1263,8 @@
                 renderAdminPhotoEditorList();
                 renderArchiveList();
                 renderPrintSheets();
+                renderSchedule();
+                renderSiteSchedules();
                 showToast("👑 관리자 모드가 성공적으로 활성화되었습니다.");
             } else {
                 showToast("관리자 비밀번호가 올바르지 않습니다.");
@@ -1261,10 +1280,12 @@
                 if (adminModeBtnIcon) adminModeBtnIcon.className = "fa-solid fa-crown text-amber-300";
                 if (adminModeBtnText) adminModeBtnText.innerText = "관리자모드";
                 if (btnTabAdmin) btnTabAdmin.className = "px-3 py-1.5 rounded-lg bg-amber-500 text-slate-900 hover:bg-amber-400 transition flex items-center gap-1.5 font-extrabold";
+                document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
             } else {
                 if (adminModeBtnIcon) adminModeBtnIcon.className = "fa-solid fa-lock";
                 if (adminModeBtnText) adminModeBtnText.innerText = "ADMIN 인증";
                 if (btnTabAdmin) btnTabAdmin.className = "px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-white transition flex items-center gap-1.5 font-bold";
+                document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
             }
         }
 
@@ -1690,7 +1711,7 @@
 
                     html += `
                         <div class="print-page-wrapper">
-                        <div id="printSheetPage_${pageIndex}" class="print-page bg-white shadow-2xl rounded-xl border border-slate-400 p-8 flex flex-col justify-between relative" style="width: 210mm; min-height: 297mm; font-family: 'Inter', sans-serif;">
+                        <div id="printSheetPage_${pageIndex}" class="print-page bg-white shadow-2xl rounded-xl border border-slate-400 p-8 flex flex-col justify-start relative" style="width: 210mm; min-height: 297mm; font-family: 'Inter', sans-serif;">
                             <table class="w-full border-collapse border-2 border-black text-center mb-1">
                                 <thead>
                                     <tr>
@@ -1735,7 +1756,7 @@
                                 </table>
                             </div>` : ''}
 
-                            <div class="text-right text-[10px] text-slate-400 pt-4 border-t">
+                            <div class="text-right text-[10px] text-slate-400 pt-4 border-t mt-auto">
                                 ${siteSettings.siteName} 스마트건설관리 시스템
                             </div>
                         </div>
@@ -2114,41 +2135,140 @@
             showToast("계정이 삭제되었습니다.");
         };
 
-        const defaultSchedule = [
-            {name:'가설공사', start:'2026-08-03', days:10},
-            {name:'토공사', start:'2026-08-13', days:14},
-            {name:'기초공사', start:'2026-08-27', days:18},
-            {name:'철근콘크리트공사', start:'2026-09-14', days:35},
-            {name:'조적·방수공사', start:'2026-10-19', days:21},
-            {name:'창호·금속공사', start:'2026-11-09', days:18},
-            {name:'내·외부 마감공사', start:'2026-11-27', days:30},
-            {name:'준공정리·검사', start:'2026-12-27', days:10}
+        const SCHEDULE_TOTAL_COST = 2477195299;
+        const scheduleRaw = [
+            ['01','공통·가설공사',189739634,'2026-07-27','2026-09-10'],
+            ['02','토공·흙막이·부지토목',369387735,'2026-08-03','2026-10-20'],
+            ['03','철근콘크리트공사',651065321,'2026-09-01','2027-01-31'],
+            ['04','조적·방수·지붕공사',63092159,'2026-11-15','2027-03-15'],
+            ['05','석·타일·미장공사',306678709,'2027-01-10','2027-05-31'],
+            ['06','금속공사',202878452,'2026-12-15','2027-05-20'],
+            ['07','창호·유리공사',224004021,'2026-12-01','2027-04-30'],
+            ['08','도장·수장공사',201256772,'2027-03-01','2027-07-15'],
+            ['09','부대·조경·폐기물',77511862,'2027-05-01','2027-08-05'],
+            ['10','품질·안전관리',23258999,'2026-07-27','2027-08-16'],
+            ['11','기계설비공사',52132526,'2026-09-15','2027-07-20'],
+            ['12','전기공사',108737452,'2026-09-15','2027-07-31'],
+            ['13','정보통신공사',40892536,'2026-11-01','2027-08-05']
         ];
-        let scheduleData = JSON.parse(localStorage.getItem('smart_schedule_v1') || 'null') || defaultSchedule.map(x=>({...x}));
+        const rawSum = scheduleRaw.reduce((s,x)=>s+x[2],0);
+        const defaultSchedule = scheduleRaw.map((x,i)=>({
+            wbs:x[0], name:x[1], cost:i===scheduleRaw.length-1 ? 0 : Math.round(x[2]*SCHEDULE_TOTAL_COST/rawSum),
+            start:x[3], end:x[4], actual:0, note:''
+        }));
+        defaultSchedule[defaultSchedule.length-1].cost = SCHEDULE_TOTAL_COST-defaultSchedule.slice(0,-1).reduce((s,x)=>s+x.cost,0);
+        let scheduleData = JSON.parse(localStorage.getItem('smart_schedule_v2') || 'null') || defaultSchedule.map(x=>({...x}));
         const addDays = (date, days) => { const d = new Date(date+'T00:00:00'); d.setDate(d.getDate()+days); return getLocalDateString(d); };
         const diffDays = (a,b) => Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000);
+        const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
+        const dateAt = s => new Date(s+'T00:00:00');
+        const projectStart = dateAt('2026-07-27'), projectEnd = dateAt('2027-08-16');
+        const projectDays = diffDays('2026-07-27','2027-08-16')+1;
+        const money = n => Math.round(n).toLocaleString('ko-KR')+'원';
+        function plannedRate(it, baseDate=new Date()) {
+            const start=dateAt(it.start), end=dateAt(it.end), total=Math.max(1,(end-start)/86400000+1);
+            return clamp(((baseDate-start)/86400000+1)/total*100,0,100);
+        }
         function renderSchedule() {
             const wrap = document.getElementById('scheduleRows'); if (!wrap) return;
-            const base = new Date('2026-08-03T00:00:00');
+            const totalCost=scheduleData.reduce((s,x)=>s+Number(x.cost||0),0)||1;
+            const today=new Date();
             wrap.innerHTML = scheduleData.map((it,i)=>{
-                const end = addDays(it.start,it.days);
-                const left = Math.max(0, Math.min(98, diffDays(getLocalDateString(base),it.start)/84*100));
-                const width = Math.max(2, Math.min(100-left,it.days/84*100));
-                return `<div class="grid grid-cols-[230px_130px_130px_1fr] border-b text-xs items-center">
-                    <div class="p-3 font-bold text-slate-800">${String(i+1).padStart(2,'0')}. ${it.name}</div>
-                    <div class="p-2"><input type="date" value="${it.start}" onchange="changeSchedule(${i},this.value)" class="w-full border rounded-lg p-1.5"></div>
-                    <div class="p-3 text-slate-600">${end}</div>
-                    <div class="p-3"><div class="h-7 bg-slate-100 rounded-lg relative overflow-hidden"><div class="absolute h-full rounded-lg bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-[10px] font-bold flex items-center px-2 whitespace-nowrap" style="left:${left}%;width:${width}%">${it.days}일</div></div></div>
+                const weight=it.cost/totalCost*100, plan=plannedRate(it,today), actual=clamp(Number(it.actual)||0,0,100), variance=(actual-plan)*weight/100;
+                const left=clamp(diffDays('2026-07-27',it.start)/projectDays*100,0,100);
+                const width=clamp((diffDays(it.start,it.end)+1)/projectDays*100,1,100-left);
+                return `<div class="grid grid-cols-[210px_120px_75px_115px_115px_70px_70px_70px_1fr] border-b text-[11px] items-center ${variance < -0.5 ? 'bg-rose-50' : ''}">
+                    <div class="p-3 font-bold text-slate-800">${it.wbs}. ${it.name}</div>
+                    <div class="p-2 text-right">${Math.round(it.cost).toLocaleString()}</div>
+                    <div class="p-2 text-right font-bold">${weight.toFixed(2)}%</div>
+                    <div class="p-2"><input ${isAdminMode?'':'disabled'} type="date" value="${it.start}" onchange="changeScheduleField(${i},'start',this.value)" class="w-full border rounded p-1 disabled:bg-transparent disabled:border-0"></div>
+                    <div class="p-2"><input ${isAdminMode?'':'disabled'} type="date" value="${it.end}" onchange="changeScheduleField(${i},'end',this.value)" class="w-full border rounded p-1 disabled:bg-transparent disabled:border-0"></div>
+                    <div class="p-2 text-right">${plan.toFixed(1)}%</div>
+                    <div class="p-2"><input ${isAdminMode?'':'disabled'} type="number" min="0" max="100" value="${actual}" onchange="changeScheduleField(${i},'actual',this.value)" class="w-full border rounded p-1 text-right disabled:bg-transparent disabled:border-0">%</div>
+                    <div class="p-2 text-right font-bold ${variance<0?'text-rose-600':'text-emerald-600'}">${variance>=0?'+':''}${variance.toFixed(2)}</div>
+                    <div class="p-3"><div class="h-6 bg-slate-100 rounded relative overflow-hidden"><div class="absolute h-full rounded bg-gradient-to-r from-blue-600 to-emerald-500" style="left:${left}%;width:${width}%"></div></div></div>
                 </div>`;
             }).join('');
+            const planTotal=scheduleData.reduce((s,it)=>s+plannedRate(it,today)*(it.cost/totalCost),0);
+            const actualTotal=scheduleData.reduce((s,it)=>s+(Number(it.actual)||0)*(it.cost/totalCost),0);
+            const variance=actualTotal-planTotal;
+            document.getElementById('scheduleTotalCost').innerText=money(totalCost);
+            document.getElementById('schedulePlanTotal').innerText=planTotal.toFixed(2)+'%';
+            document.getElementById('scheduleActualTotal').innerText=actualTotal.toFixed(2)+'%';
+            const v=document.getElementById('scheduleVariance'); v.innerText=(variance>=0?'+':'')+variance.toFixed(2)+'%p'; v.className='block text-sm mt-1 '+(variance<0?'text-rose-600':'text-emerald-600');
+            renderMonthlyProgress(totalCost);
         }
-        window.changeSchedule = function(index,newStart) {
-            const shift = diffDays(scheduleData[index].start,newStart);
-            scheduleData[index].start = newStart;
-            for(let i=index+1;i<scheduleData.length;i++) scheduleData[i].start = addDays(scheduleData[i].start,shift);
-            localStorage.setItem('smart_schedule_v1',JSON.stringify(scheduleData)); renderSchedule(); showToast('후속 공정 일정이 함께 조정되었습니다.');
+        function renderMonthlyProgress(totalCost) {
+            const months=[]; let d=new Date(2026,6,1);
+            while(d<=projectEnd){months.push(new Date(d)); d.setMonth(d.getMonth()+1);}
+            let cumulative=0;
+            const cells=months.map(m=>{
+                const ms=new Date(m.getFullYear(),m.getMonth(),1), me=new Date(m.getFullYear(),m.getMonth()+1,0);
+                let rate=0;
+                scheduleData.forEach(it=>{
+                    const s=dateAt(it.start),e=dateAt(it.end), from=Math.max(s,ms),to=Math.min(e,me);
+                    if(from<=to) rate+=((to-from)/86400000+1)/((e-s)/86400000+1)*(it.cost/totalCost*100);
+                });
+                cumulative+=rate;
+                return `<td class="p-2 border text-center"><b>${m.getMonth()+1}월</b><br><span class="text-blue-600">${rate.toFixed(1)}%</span><br><span class="text-slate-500">누계 ${Math.min(100,cumulative).toFixed(1)}%</span></td>`;
+            }).join('');
+            document.getElementById('monthlyProgressTable').innerHTML=`<div class="p-4 border-b"><b class="text-sm">월별 예정 공정률</b></div><table class="min-w-[1100px] w-full text-[10px]"><tr>${cells}</tr></table>`;
+        }
+        window.changeScheduleField = function(index,key,value) {
+            if(!isAdminMode) return;
+            scheduleData[index][key]=key==='actual'?clamp(Number(value),0,100):value;
+            localStorage.setItem('smart_schedule_v2',JSON.stringify(scheduleData)); renderSchedule(); showToast('공정표가 저장되었습니다.');
         };
-        window.resetSchedule = function() { scheduleData=defaultSchedule.map(x=>({...x})); localStorage.removeItem('smart_schedule_v1'); renderSchedule(); showToast('초기 공정표로 복원되었습니다.'); };
+        window.resetSchedule = function() { if(!isAdminMode)return; scheduleData=defaultSchedule.map(x=>({...x})); localStorage.removeItem('smart_schedule_v2'); renderSchedule(); showToast('표준 공정표로 복원되었습니다.'); };
+        window.printSchedule = function(){
+            const s=document.getElementById('tabScheduleView'),style=document.createElement('style');
+            style.id='schedulePageStyle';style.textContent='@page{size:A4 landscape;margin:8mm}';document.head.appendChild(style);
+            s.classList.add('schedule-printing');window.print();
+            setTimeout(()=>{s.classList.remove('schedule-printing');style.remove();},500);
+        };
+
+        const defaultSiteSchedules=[
+            {date:'2026-07-27',time:'08:00',category:'회의',title:'착공 및 현장 운영회의',location:'현장사무실',manager:'현장소장',important:true,done:false},
+            {date:'2026-08-03',time:'08:00',category:'자재반입',title:'가설자재 반입',location:'현장 정문',manager:'공사팀',important:false,done:false}
+        ];
+        let siteSchedules=JSON.parse(localStorage.getItem('smart_site_schedules_v1')||'null')||defaultSiteSchedules;
+        function renderSiteSchedules(){
+            const home=document.getElementById('homeScheduleList'),admin=document.getElementById('adminScheduleList'); if(!home)return;
+            const today=getLocalDateString(), upcoming=siteSchedules.filter(x=>!x.done&&x.date>=today).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).slice(0,5);
+            home.innerHTML=upcoming.length?upcoming.map(x=>`<div class="flex items-center gap-3 p-3 rounded-xl ${x.date===today?'bg-blue-50 border-blue-200':'bg-slate-50'} border">
+                <div class="w-14 text-center"><b class="block text-xs ${x.date===today?'text-blue-600':'text-slate-700'}">${x.date===today?'오늘':x.date.slice(5)}</b><span class="text-[10px] text-slate-500">${x.time}</span></div>
+                <div class="min-w-0 flex-1"><b class="text-sm text-slate-900">${x.title}</b><p class="text-[10px] text-slate-500 mt-0.5">${x.category} · ${x.location||'위치 미정'} · ${x.manager||'담당 미정'}</p></div>${x.important?'<span class="text-[10px] bg-rose-100 text-rose-700 px-2 py-1 rounded-full font-bold">중요</span>':''}
+            </div>`).join(''):'<div class="text-center text-xs text-slate-400 py-8">등록된 향후 주요 일정이 없습니다.</div>';
+            if(admin) admin.innerHTML=siteSchedules.length?siteSchedules.map((x,i)=>`<div class="grid grid-cols-2 sm:grid-cols-[125px_85px_105px_1fr_120px_90px] gap-2 items-center p-3 bg-slate-50 rounded-xl border">
+                <input type="date" value="${x.date}" onchange="editSiteSchedule(${i},'date',this.value)" class="border rounded-lg p-2 text-xs">
+                <input type="time" value="${x.time}" onchange="editSiteSchedule(${i},'time',this.value)" class="border rounded-lg p-2 text-xs">
+                <select onchange="editSiteSchedule(${i},'category',this.value)" class="border rounded-lg p-2 text-xs">${['자재반입','시공','검사·검측','회의','장비','안전','기타'].map(v=>`<option ${v===x.category?'selected':''}>${v}</option>`).join('')}</select>
+                <input value="${x.title}" onchange="editSiteSchedule(${i},'title',this.value)" placeholder="일정명" class="border rounded-lg p-2 text-xs">
+                <input value="${x.manager||''}" onchange="editSiteSchedule(${i},'manager',this.value)" placeholder="담당자/업체" class="border rounded-lg p-2 text-xs">
+                <div class="flex gap-1"><button onclick="toggleSiteSchedule(${i})" class="flex-1 p-2 rounded-lg ${x.done?'bg-emerald-100 text-emerald-700':'bg-white border'} text-[10px] font-bold">${x.done?'완료':'미완료'}</button><button onclick="deleteSiteSchedule(${i})" class="p-2 text-rose-600"><i class="fa-solid fa-trash"></i></button></div>
+            </div>`).join(''):'<p class="text-center text-xs text-slate-400 py-5">등록된 일정이 없습니다.</p>';
+        }
+        function saveSiteSchedules(){localStorage.setItem('smart_site_schedules_v1',JSON.stringify(siteSchedules));renderSiteSchedules();}
+        window.openScheduleManager=function(){if(!isAdminMode){handleAdminModeToggle();return;}switchTab('tabAdminView');setTimeout(()=>document.getElementById('adminScheduleManager').scrollIntoView({behavior:'smooth'}),50);};
+        window.addSiteSchedule=function(){siteSchedules.push({date:getLocalDateString(),time:'08:00',category:'시공',title:'새 주요 일정',location:'현장',manager:'',important:false,done:false});saveSiteSchedules();};
+        window.editSiteSchedule=function(i,k,v){siteSchedules[i][k]=v;saveSiteSchedules();};
+        window.toggleSiteSchedule=function(i){siteSchedules[i].done=!siteSchedules[i].done;saveSiteSchedules();};
+        window.deleteSiteSchedule=function(i){if(confirm('이 일정을 삭제하시겠습니까?')){siteSchedules.splice(i,1);saveSiteSchedules();}};
+
+        async function loadGangneungWeather(){
+            const now=new Date(), dateEl=document.getElementById('weatherDate');
+            if(dateEl)dateEl.innerText=new Intl.DateTimeFormat('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(now);
+            try{
+                const url='https://api.open-meteo.com/v1/forecast?latitude=37.7519&longitude=128.8761&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=precipitation_probability&timezone=Asia%2FSeoul&forecast_days=1';
+                const r=await fetch(url); if(!r.ok)throw new Error(); const data=await r.json(),c=data.current;
+                const names={0:'맑음',1:'대체로 맑음',2:'부분 흐림',3:'흐림',45:'안개',48:'안개',51:'이슬비',53:'이슬비',55:'강한 이슬비',61:'비',63:'비',65:'강한 비',71:'눈',73:'눈',75:'폭설',80:'소나기',81:'소나기',82:'강한 소나기',95:'뇌우'};
+                const rain=Math.max(...(data.hourly?.precipitation_probability||[0])),temp=Number(c.temperature_2m),hum=Number(c.relative_humidity_2m),wind=Number(c.wind_speed_10m)/3.6;
+                document.getElementById('weatherSummary').innerText=`${names[c.weather_code]||'기상 확인'} · ${temp.toFixed(1)}℃`;
+                document.getElementById('weatherRain').innerText=rain+'%';document.getElementById('weatherHumidity').innerText=hum+'%';document.getElementById('weatherWind').innerText=wind.toFixed(1)+'m/s';
+                const notes=[];if(rain>=40)notes.push('콘크리트 타설·방수·도장 작업 주의');if(wind>=8)notes.push('고소작업·크레인·비계 작업 주의');if(temp>=33)notes.push('폭염 휴식·수분 섭취 및 온열질환 주의');if(temp<=0)notes.push('결빙·콘크리트 양생·보온 주의');if(hum>=80)notes.push('미끄럼·전기작업·도장 건조상태 주의');
+                document.getElementById('weatherAdvice').innerText=notes.join(' · ')||'특이 기상사항 없음. 일반 안전수칙을 준수하세요.';
+            }catch(e){document.getElementById('weatherSummary').innerText='기상정보 확인 중';}
+        }
         window.openDrawing = function(path,title) {
             const card=document.getElementById('drawingViewerCard'), frame=document.getElementById('drawingFrame'), link=document.getElementById('drawingOpenNew');
             const activeDrawingSection = ['tabDrawingArchitectureView','tabDrawingStructureView']
