@@ -128,18 +128,21 @@
                 <h1 class="font-bold text-lg tracking-tight">스마트건설관리 <span class="text-xs text-slate-400 font-normal">| NH농협은행 강릉 금융센터 신축공사</span></h1>
             </div>
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                <nav id="topNavTabs" class="grid grid-cols-4 sm:flex gap-1.5 sm:gap-2 text-xs font-medium w-full sm:w-auto">
+                <nav id="topNavTabs" class="grid grid-cols-5 sm:flex gap-1.5 sm:gap-2 text-xs font-medium w-full sm:w-auto">
                     <button onclick="goHome()" id="btnMain_home" class="px-2 sm:px-3 py-1.5 rounded-lg bg-blue-600 text-white transition flex items-center justify-center gap-1.5 shadow font-bold">
                         <i class="fa-solid fa-house"></i> <span class="hidden xs:inline">홈</span>
                     </button>
-                    <button onclick="toggleSubMenu('photo')" id="btnMain_photo" class="px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center justify-center gap-1 font-bold">
-                        <i class="fa-solid fa-camera"></i> 사진 <i class="fa-solid fa-chevron-down text-[9px]"></i>
+                    <button onclick="selectSubTab('photo','tabDailyView')" id="btnMain_photo" class="px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center justify-center gap-1 font-bold">
+                        <i class="fa-solid fa-camera"></i> 사진
                     </button>
-                    <button onclick="toggleSubMenu('quality')" id="btnMain_quality" class="px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center justify-center gap-1 font-bold">
-                        <i class="fa-solid fa-clipboard-check"></i> 품질 <i class="fa-solid fa-chevron-down text-[9px]"></i>
+                    <button onclick="selectSubTab('quality','tabMaterialApprovalView')" id="btnMain_quality" class="px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center justify-center gap-1 font-bold">
+                        <i class="fa-solid fa-clipboard-check"></i> 품질
                     </button>
-                    <button onclick="toggleSubMenu('drawing')" id="btnMain_drawing" class="px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center justify-center gap-1 font-bold">
-                        <i class="fa-solid fa-compass-drafting"></i> 도면 <i class="fa-solid fa-chevron-down text-[9px]"></i>
+                    <button onclick="selectSubTab('drawing','tabDrawingArchitectureView')" id="btnMain_drawing" class="px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center justify-center gap-1 font-bold">
+                        <i class="fa-solid fa-compass-drafting"></i> 도면
+                    </button>
+                    <button onclick="selectSubTab('schedule','tabScheduleView')" id="btnMain_schedule" class="px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition flex items-center justify-center gap-1 font-bold">
+                        <i class="fa-solid fa-calendar-days"></i> 공정
                     </button>
                 </nav>
                 <div class="flex items-center gap-2 sm:pl-2 sm:border-l sm:border-slate-700">
@@ -207,6 +210,50 @@
                     </div>
                 </div>
             </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <button onclick="selectSubTab('drawing','tabDrawingOverviewView')" class="text-left bg-white p-5 rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-md transition">
+                    <span class="text-[11px] font-bold text-blue-600">설계도서</span>
+                    <h3 class="font-black text-slate-900 mt-1">건축·구조 도면 바로보기</h3>
+                    <p class="text-xs text-slate-500 mt-2">현장에서 휴대폰으로 확대·축소하며 PDF 도면을 확인합니다.</p>
+                </button>
+                <button onclick="selectSubTab('schedule','tabScheduleView')" class="text-left bg-white p-5 rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition">
+                    <span class="text-[11px] font-bold text-emerald-600">통합 WBS</span>
+                    <h3 class="font-black text-slate-900 mt-1">공정표·간트차트</h3>
+                    <p class="text-xs text-slate-500 mt-2">주요 공정의 기간과 선후행 관계를 한눈에 확인합니다.</p>
+                </button>
+                <button onclick="selectSubTab('quality','tabMaterialApprovalView')" class="text-left bg-white p-5 rounded-2xl border border-slate-200 hover:border-amber-400 hover:shadow-md transition">
+                    <span class="text-[11px] font-bold text-amber-600">품질관리</span>
+                    <h3 class="font-black text-slate-900 mt-1">승인·검수·시험</h3>
+                    <p class="text-xs text-slate-500 mt-2">공정과 연결되는 품질관리 기록의 기본 공간입니다.</p>
+                </button>
+            </div>
+        </section>
+
+        <!-- 공정관리 -->
+        <section id="tabScheduleView" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <p class="text-[11px] font-bold text-emerald-600">WBS 1차 초안</p>
+                        <h2 class="text-xl font-black text-slate-900">통합 공정표</h2>
+                        <p class="text-xs text-slate-500 mt-1">일정을 수정하면 브라우저에 저장되며, 후속 공정은 자동으로 연결됩니다.</p>
+                    </div>
+                    <button onclick="resetSchedule()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700"><i class="fa-solid fa-rotate-left mr-1"></i>초기 일정 복원</button>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <div class="min-w-[900px]">
+                        <div class="grid grid-cols-[230px_130px_130px_1fr] bg-slate-900 text-white text-xs font-bold">
+                            <div class="p-3">작업명</div><div class="p-3">시작일</div><div class="p-3">종료일</div><div class="p-3">간트 (12주)</div>
+                        </div>
+                        <div id="scheduleRows"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-xs text-blue-900">
+                <i class="fa-solid fa-circle-info mr-1"></i> 현재 버전은 주요 공정의 일정 편집과 자동 후속 이동이 작동하는 1차 골격입니다. 도면·내역서 AI 분석 후 세부 WBS로 확장됩니다.
+            </div>
         </section>
 
         <!-- Tab 1: Daily View (Photo Uploader & Tree Editor) -->
@@ -262,9 +309,6 @@
                             </span>
                             <div class="flex flex-wrap gap-4 text-xs font-medium">
                                 <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="syncBand" checked class="rounded text-blue-600 focus:ring-blue-500"> 📱 밴드
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer">
                                     <input type="checkbox" id="syncSheet" checked class="rounded text-blue-600 focus:ring-blue-500"> 📄 준공대지
                                 </label>
                                 <label class="flex items-center gap-1.5 cursor-pointer">
@@ -286,6 +330,17 @@
                             <button onclick="resetActivePhotoDesc()" class="text-xs text-slate-500 hover:text-slate-800 underline">문구 초기화</button>
                         </div>
 
+                        <!-- Active Photo Description Input -->
+                        <div class="space-y-1.5 rounded-xl border border-blue-200 bg-blue-50 p-3">
+                            <label id="activePhotoTitleLabel" class="text-xs font-bold text-slate-700 block">
+                                <i class="fa-solid fa-pen-to-square text-blue-600 mr-1"></i>선택된 사진 개별 작업 설명
+                            </label>
+                            <input type="text" id="activePhotoDescInput" oninput="updateActivePhotoDesc(this.value)" placeholder="아래 공종을 선택하거나 작업 내용을 직접 입력하세요." class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                        </div>
+
+                        <div id="mobileWorkTree" class="space-y-2"></div>
+
+                        <div class="hidden">
                         <!-- Construction Category 1: Site Prep / Temporary -->
                         <div class="border border-amber-200 bg-amber-50/30 rounded-xl p-3 space-y-2">
                             <span class="text-xs font-bold text-amber-900 flex items-center gap-1">
@@ -325,32 +380,10 @@
                             </div>
                         </div>
 
-                        <!-- Active Photo Description Input -->
-                        <div class="space-y-1.5 pt-2">
-                            <label id="activePhotoTitleLabel" class="text-xs font-bold text-slate-700 block">
-                                <i class="fa-solid fa-pen-to-square text-blue-600 mr-1"></i>선택된 사진 개별 작업 설명
-                            </label>
-                            <input type="text" id="activePhotoDescInput" oninput="updateActivePhotoDesc(this.value)" placeholder="사진을 선택하고 작업 내용을 입력하세요." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        </div>
-
-                        <!-- Band Export Integrated Text Box -->
-                        <div class="space-y-1.5 pt-2 border-t">
-                            <div class="flex justify-between items-center text-xs">
-                                <span class="font-bold text-slate-700 flex items-center gap-1">
-                                    <i class="fa-solid fa-file-lines text-emerald-600"></i> 밴드 게시글용 통합 문구
-                                </span>
-                                <button onclick="regenerateBandText()" class="text-[11px] text-blue-600 hover:underline">
-                                    <i class="fa-solid fa-rotate mr-1"></i>문구 다시 자동 집계
-                                </button>
-                            </div>
-                            <textarea id="bandUnifiedText" rows="4" class="w-full p-3 border border-slate-300 rounded-xl text-xs font-mono bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 custom-scrollbar"></textarea>
                         </div>
 
                         <!-- Action Buttons -->
                         <div class="flex flex-col sm:flex-row gap-3 pt-2">
-                            <button onclick="copyBandUnifiedText()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center gap-2">
-                                <i class="fa-regular fa-copy"></i> 밴드문구 복사
-                            </button>
                             <button onclick="syncAndSaveAll()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-cloud-arrow-up"></i> 클라우드 공용 동기화 반영
                             </button>
@@ -585,45 +618,47 @@
 
         <!-- 도면 하위 탭 -->
         <section id="tabDrawingOverviewView" class="hidden space-y-6">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-3 min-h-[420px]">
-                <i class="fa-solid fa-list-check text-4xl text-slate-300"></i>
-                <h2 class="font-bold text-lg text-slate-700">개요</h2>
-                <p class="text-xs text-slate-400">추후 콘텐츠가 채워질 예정입니다.</p>
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <i class="fa-solid fa-compass-drafting text-3xl text-blue-600"></i>
+                <h2 class="font-black text-xl text-slate-900 mt-4">도면관리</h2>
+                <p class="text-xs text-slate-500 mt-2">상단에서 건축·구조·3D를 선택하면 분야별로 분리된 도면을 바로 열 수 있습니다.</p>
             </div>
         </section>
-        <section id="tabDrawingPlanView" class="hidden space-y-6">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-3 min-h-[420px]">
-                <i class="fa-solid fa-border-all text-4xl text-slate-300"></i>
-                <h2 class="font-bold text-lg text-slate-700">평면도</h2>
-                <p class="text-xs text-slate-400">추후 콘텐츠가 채워질 예정입니다.</p>
+        <section id="tabDrawingArchitectureView" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                <p class="text-[11px] font-bold text-blue-600">건축</p>
+                <h2 class="text-xl font-black text-slate-900">건축도면</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5">
+                    <button onclick="openDrawing('documents/architecture/plans.pdf','건축 · 평면도')" class="p-4 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold text-sm"><i class="fa-solid fa-border-all block text-xl mb-2"></i>평면도</button>
+                    <button onclick="openDrawing('documents/architecture/elevations.pdf','건축 · 입면도')" class="p-4 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold text-sm"><i class="fa-solid fa-building block text-xl mb-2"></i>입면도</button>
+                    <button onclick="openDrawing('documents/architecture/sections.pdf','건축 · 단면도')" class="p-4 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold text-sm"><i class="fa-solid fa-layer-group block text-xl mb-2"></i>단면도</button>
+                    <button onclick="openDrawing('documents/architecture/finishes.pdf','건축 · 마감도')" class="p-4 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold text-sm"><i class="fa-solid fa-paint-roller block text-xl mb-2"></i>마감도</button>
+                    <button onclick="openDrawing('documents/architecture/windows.pdf','건축 · 창호도')" class="p-4 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold text-sm"><i class="fa-solid fa-table-cells-large block text-xl mb-2"></i>창호도</button>
+                    <button onclick="openDrawing('documents/architecture/details.pdf','건축 · 상세도')" class="p-4 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold text-sm"><i class="fa-solid fa-magnifying-glass-plus block text-xl mb-2"></i>상세도</button>
+                </div>
+            </div>
+            <div id="drawingViewerCard" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-3 border-b flex items-center justify-between"><strong id="drawingViewerTitle" class="text-sm"></strong><a id="drawingOpenNew" target="_blank" class="text-xs font-bold text-blue-600"><i class="fa-solid fa-up-right-from-square mr-1"></i>새 화면</a></div>
+                <iframe id="drawingFrame" title="도면 PDF 뷰어" class="w-full h-[72vh] bg-slate-200"></iframe>
             </div>
         </section>
-        <section id="tabDrawingElevationView" class="hidden space-y-6">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-3 min-h-[420px]">
-                <i class="fa-solid fa-building text-4xl text-slate-300"></i>
-                <h2 class="font-bold text-lg text-slate-700">입면도</h2>
-                <p class="text-xs text-slate-400">추후 콘텐츠가 채워질 예정입니다.</p>
+        <section id="tabDrawingStructureView" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                <p class="text-[11px] font-bold text-emerald-600">구조</p>
+                <h2 class="text-xl font-black text-slate-900">구조도면</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5">
+                    <button onclick="openDrawing('documents/structure/plans.pdf','구조 · 기초 및 층별 평면도')" class="p-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-bold text-sm"><i class="fa-solid fa-border-all block text-xl mb-2"></i>기초·층별 평면도</button>
+                    <button onclick="openDrawing('documents/structure/schedules-details.pdf','구조 · 일람표 및 상세도')" class="p-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-bold text-sm"><i class="fa-solid fa-table-list block text-xl mb-2"></i>일람표·상세도</button>
+                    <button onclick="openDrawing('documents/structure/sections.pdf','구조 · 단면도')" class="p-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-bold text-sm"><i class="fa-solid fa-layer-group block text-xl mb-2"></i>단면도</button>
+                </div>
             </div>
-        </section>
-        <section id="tabDrawingBirdseyeView" class="hidden space-y-6">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-3 min-h-[420px]">
-                <i class="fa-solid fa-mountain-sun text-4xl text-slate-300"></i>
-                <h2 class="font-bold text-lg text-slate-700">조감도</h2>
-                <p class="text-xs text-slate-400">추후 콘텐츠가 채워질 예정입니다.</p>
-            </div>
+            <div id="structureDrawingViewerCard" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"></div>
         </section>
         <section id="tabDrawing3DView" class="hidden space-y-6">
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-3 min-h-[420px]">
                 <i class="fa-solid fa-cube text-4xl text-slate-300"></i>
                 <h2 class="font-bold text-lg text-slate-700">3D</h2>
-                <p class="text-xs text-slate-400">추후 콘텐츠가 채워질 예정입니다.</p>
-            </div>
-        </section>
-        <section id="tabDrawingFinishView" class="hidden space-y-6">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-3 min-h-[420px]">
-                <i class="fa-solid fa-paint-roller text-4xl text-slate-300"></i>
-                <h2 class="font-bold text-lg text-slate-700">마감</h2>
-                <p class="text-xs text-slate-400">추후 콘텐츠가 채워질 예정입니다.</p>
+                <p class="text-xs text-slate-400">향후 3D 모델과 이미지를 연결할 공간입니다.</p>
             </div>
         </section>
     </main>
@@ -732,11 +767,15 @@
             setupGlobalUsersSync();
             setupGlobalSettingsSync();
             setupGlobalPublicPhotosSync();
+            renderMobileWorkTree();
 
             isAdminMode = false;
             updateAdminButtonState();
 
-            const savedUser = localStorage.getItem('smart_construction_current_user');
+            // 로그인 정보는 브라우저 세션 동안만 유지한다.
+            // 이전 버전에서 남긴 영구 로그인 정보는 자동 삭제한다.
+            localStorage.removeItem('smart_construction_current_user');
+            const savedUser = sessionStorage.getItem('smart_construction_current_user');
             if (savedUser) {
                 try {
                     currentUser = JSON.parse(savedUser);
@@ -1090,7 +1129,7 @@
                 await saveGlobalUsersToCloud();
                 
                 currentUser = newUser;
-                localStorage.setItem('smart_construction_current_user', JSON.stringify(currentUser));
+                sessionStorage.setItem('smart_construction_current_user', JSON.stringify(currentUser));
                 showToast("회원가입 및 로그인 완료!");
                 unlockApp(currentUser);
             } else {
@@ -1100,7 +1139,7 @@
                     return;
                 }
                 currentUser = found;
-                localStorage.setItem('smart_construction_current_user', JSON.stringify(currentUser));
+                sessionStorage.setItem('smart_construction_current_user', JSON.stringify(currentUser));
                 showToast(`${currentUser.name}님 환영합니다!`);
                 unlockApp(currentUser);
             }
@@ -1125,6 +1164,7 @@
         };
 
         window.handleLogout = function() {
+            sessionStorage.removeItem('smart_construction_current_user');
             localStorage.removeItem('smart_construction_current_user');
             currentUser = null;
             isAdminMode = false;
@@ -1189,6 +1229,7 @@
                 renderAdminUserTable();
                 renderAdminPhotoEditorList();
                 renderArchiveList();
+                renderPrintSheets();
                 showToast("👑 관리자 모드가 성공적으로 활성화되었습니다.");
             } else {
                 showToast("관리자 비밀번호가 올바르지 않습니다.");
@@ -1216,12 +1257,13 @@
             updateAdminButtonState();
             goHome();
             renderArchiveList();
+            renderPrintSheets();
             showToast("일반 모드로 전환되었습니다.");
         };
 
-        const ALL_TAB_IDS = ['tabHomeView', 'tabDailyView', 'tabPrintSheetView', 'tabArchiveView', 'tabAdminView',
+        const ALL_TAB_IDS = ['tabHomeView', 'tabDailyView', 'tabPrintSheetView', 'tabArchiveView', 'tabAdminView', 'tabScheduleView',
             'tabMaterialApprovalView', 'tabMaterialInspectionView', 'tabQualityTestView',
-            'tabDrawingOverviewView', 'tabDrawingPlanView', 'tabDrawingElevationView', 'tabDrawingBirdseyeView', 'tabDrawing3DView', 'tabDrawingFinishView'];
+            'tabDrawingOverviewView', 'tabDrawingArchitectureView', 'tabDrawingStructureView', 'tabDrawing3DView'];
 
         window.switchTab = function(tabId) {
             ALL_TAB_IDS.forEach(id => {
@@ -1267,18 +1309,18 @@
                 { id: 'tabQualityTestView', icon: 'fa-vial', label: '품질시험' }
             ],
             drawing: [
-                { id: 'tabDrawingOverviewView', icon: 'fa-list-check', label: '개요' },
-                { id: 'tabDrawingPlanView', icon: 'fa-border-all', label: '평면도' },
-                { id: 'tabDrawingElevationView', icon: 'fa-building', label: '입면도' },
-                { id: 'tabDrawingBirdseyeView', icon: 'fa-mountain-sun', label: '조감도' },
-                { id: 'tabDrawing3DView', icon: 'fa-cube', label: '3D' },
-                { id: 'tabDrawingFinishView', icon: 'fa-paint-roller', label: '마감' }
+                { id: 'tabDrawingArchitectureView', icon: 'fa-building', label: '건축' },
+                { id: 'tabDrawingStructureView', icon: 'fa-cubes-stacked', label: '구조' },
+                { id: 'tabDrawing3DView', icon: 'fa-cube', label: '3D' }
+            ],
+            schedule: [
+                { id: 'tabScheduleView', icon: 'fa-chart-gantt', label: '통합 공정표' }
             ]
         };
         let currentSubCategory = null;
 
         function highlightMainNav(activeKey) {
-            ['home', 'photo', 'quality', 'drawing'].forEach(key => {
+            ['home', 'photo', 'quality', 'drawing', 'schedule'].forEach(key => {
                 const btn = document.getElementById('btnMain_' + key);
                 if (!btn) return;
                 btn.className = (key === activeKey)
@@ -1379,7 +1421,6 @@
             activePhotoList.push(...newItems);
             if (wasEmpty && activePhotoList.length > 0) activeSelectedIndex = 0;
             renderThumbnailGrid();
-            updateBandUnifiedText();
 
             showToast(`${files.length}장의 사진이 등록되었습니다.`);
             event.target.value = '';
@@ -1429,7 +1470,6 @@
                 activeSelectedIndex = Math.max(0, activePhotoList.length - 1);
             }
             renderThumbnailGrid();
-            updateBandUnifiedText();
             showToast("사진이 삭제되었습니다.");
         };
 
@@ -1437,7 +1477,6 @@
             activePhotoList = [];
             activeSelectedIndex = 0;
             renderThumbnailGrid();
-            updateBandUnifiedText();
             showToast("모든 사진이 초기화되었습니다.");
         };
 
@@ -1450,14 +1489,12 @@
             const descInput = document.getElementById('activePhotoDescInput');
             if (descInput) descInput.value = text;
             renderThumbnailGrid();
-            updateBandUnifiedText();
             showToast(`사진 #${activeSelectedIndex+1}에 작업 내용이 적용되었습니다.`);
         };
 
         window.updateActivePhotoDesc = function(val) {
             if (activePhotoList.length > 0 && activePhotoList[activeSelectedIndex]) {
                 activePhotoList[activeSelectedIndex].description = val;
-                updateBandUnifiedText();
             }
         };
 
@@ -1466,31 +1503,66 @@
                 activePhotoList[activeSelectedIndex].description = "";
                 const descInput = document.getElementById('activePhotoDescInput');
                 if (descInput) descInput.value = "";
-                updateBandUnifiedText();
                 showToast("작업 설명이 초기화되었습니다.");
             }
         };
 
-        window.updateBandUnifiedText = function() {
-            let txt = `[${siteSettings.siteName} 현장일보]\n- 작성일자: ${getLocalDateString()}\n`;
-            activePhotoList.forEach((item, idx) => {
-                txt += `\n[사진 ${idx+1}] ${item.location}\n- 내용: ${item.description || '특이사항 없음'}\n`;
-            });
-            const bandArea = document.getElementById('bandUnifiedText');
-            if (bandArea) bandArea.value = txt;
-        };
+        const workTreeData = [
+            { major: '현장준비·가설공사', groups: [
+                { middle: '현장준비', items: ['가설 컨테이너 반입·안착', '경계점 확인 및 규준틀 측량', '부지 지장물 정리 및 평탄화'] },
+                { middle: '가설공사', items: ['가설 펜스 및 방지망 설치', '가설전기·가설용수 설치', '안전시설물 설치'] }
+            ]},
+            { major: '토공·흙막이공사', groups: [
+                { middle: '토공사', items: ['터파기 및 잔토 반출', '되메우기 및 다짐', '우·오수 관로 및 맨홀 설치'] },
+                { middle: '흙막이·지정', items: ['흙막이 및 토류판 시공', 'CIP 시공', '지반보강 및 그라우팅'] }
+            ]},
+            { major: '철근콘크리트공사', groups: [
+                { middle: '기초', items: ['기초 철근배근', '기초 거푸집', '기초 콘크리트 타설·양생'] },
+                { middle: '벽체·기둥', items: ['벽체·기둥 철근배근', '벽체·기둥 거푸집', '벽체·기둥 콘크리트 타설·양생'] },
+                { middle: '보·슬래브', items: ['보·슬래브 철근배근', '보·슬래브 거푸집', '보·슬래브 콘크리트 타설·양생'] }
+            ]},
+            { major: '건축마감공사', groups: [
+                { middle: '조적·방수·타일', items: ['조적벽체 시공', '방수공사', '타일공사'] },
+                { middle: '창호·유리·금속', items: ['창호 설치', '유리 설치', '금속공사'] },
+                { middle: '미장·도장·수장', items: ['미장공사', '도장공사', '천장·벽체·바닥 수장공사'] }
+            ]},
+            { major: '부대·설비공사', groups: [
+                { middle: '기계·전기설비', items: ['기계설비 배관', '전기 배관·배선', '기기 및 기구 설치'] },
+                { middle: '외부·부대공사', items: ['외부 포장공사', '조경공사', '준공청소 및 정리'] }
+            ]}
+        ];
 
-        window.regenerateBandText = function() {
-            updateBandUnifiedText();
-            showToast("밴드 문구가 최신 상태로 재집계되었습니다.");
-        };
+        function renderMobileWorkTree() {
+            const wrap = document.getElementById('mobileWorkTree');
+            if (!wrap) return;
+            wrap.innerHTML = workTreeData.map((major, majorIndex) => `
+                <details class="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                    <summary class="cursor-pointer list-none px-4 py-3 font-bold text-xs text-slate-800 bg-slate-50 flex justify-between items-center">
+                        <span><i class="fa-solid fa-folder-tree text-blue-600 mr-2"></i>${major.major}</span>
+                        <i class="fa-solid fa-chevron-down text-slate-400"></i>
+                    </summary>
+                    <div class="p-2 space-y-2">
+                        ${major.groups.map((group, groupIndex) => `
+                            <details class="rounded-lg border border-slate-200 overflow-hidden">
+                                <summary class="cursor-pointer list-none px-3 py-2.5 font-bold text-xs text-slate-700 flex justify-between items-center">
+                                    <span>${group.middle}</span><i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                                </summary>
+                                <div class="grid grid-cols-1 gap-1.5 p-2 pt-0">
+                                    ${group.items.map(item => `
+                                        <button type="button" onclick="applyWorkTreeItem('${major.major}','${group.middle}','${item}')" class="w-full rounded-lg border border-blue-100 bg-blue-50 px-3 py-2.5 text-left text-xs font-medium text-blue-950 hover:bg-blue-100">
+                                            ${item}
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            </details>
+                        `).join('')}
+                    </div>
+                </details>
+            `).join('');
+        }
 
-        window.copyBandUnifiedText = function() {
-            const textarea = document.getElementById('bandUnifiedText');
-            if (!textarea) return;
-            textarea.select();
-            document.execCommand('copy');
-            showToast("📋 밴드 게시글용 통합 문구가 클립보드에 복사되었습니다!");
+        window.applyWorkTreeItem = function(major, middle, item) {
+            applyPreset(`${major} - ${middle} - ${item}`);
         };
 
         window.syncAndSaveAll = async function() {
@@ -1499,7 +1571,6 @@
                 return;
             }
 
-            const doBand = document.getElementById('syncBand').checked;
             const doSheet = document.getElementById('syncSheet').checked;
             const doArchive = document.getElementById('syncArchive').checked;
 
@@ -1522,10 +1593,6 @@
             let msg = "클라우드 공용 동기화 완료! ";
             if (doSheet) msg += "[준공대지 추가됨] ";
             if (doArchive) msg += "[보관함 추가됨] ";
-            if (doBand) {
-                copyBandUnifiedText();
-                msg += "[밴드복사완료]";
-            }
             showToast(msg);
             selectSubTab('photo', 'tabPrintSheetView');
         };
@@ -1589,30 +1656,15 @@
                 return dateStr;
             };
 
-            // Group filtered items by date
-            const grouped = {};
-            filteredPhotos.forEach((item) => {
-                const d = item.date || '날짜미상';
-                if (!grouped[d]) grouped[d] = [];
-                grouped[d].push(item);
-            });
-            const sortedDates = Object.keys(grouped).sort();
+            // 날짜와 관계없이 모든 사진을 연속으로 연결해 A4 2장씩 배치한다.
+            const grouped = { all: filteredPhotos };
+            const sortedDates = ['all'];
 
             let html = '';
             let pageIndex = 0;
 
             sortedDates.forEach(dateKey => {
                 const items = grouped[dateKey];
-
-                html += `
-                    <div class="w-full flex items-center gap-3 no-print date-divider" style="max-width: 210mm;">
-                        <div class="h-px flex-1 bg-slate-400"></div>
-                        <span class="text-xs font-black text-slate-700 bg-white px-4 py-1.5 rounded-full border-2 border-slate-400 shadow-sm">
-                            <i class="fa-solid fa-calendar-day mr-1 text-blue-600"></i> ${formatFullDate(dateKey)} (${items.length}장)
-                        </span>
-                        <div class="h-px flex-1 bg-slate-400"></div>
-                    </div>
-                `;
 
                 for (let i = 0; i < items.length; i += 2) {
                     const p1 = items[i];
@@ -1631,12 +1683,10 @@
                                     </tr>
                                 </thead>
                             </table>
-                            <div class="text-center text-xs font-bold text-slate-500 mb-4">${formatFullDate(dateKey)} 촬영분</div>
-
                             <div class="border-2 border-black mb-6 flex flex-col relative group">
-                                <button onclick="deleteSheetPhotoIndex(${p1.originalIndex})" class="absolute top-2 right-2 bg-rose-600 hover:bg-rose-700 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-lg z-10 no-print" title="이 사진 삭제">
+                                ${isAdminMode ? `<button onclick="deleteSheetPhotoIndex(${p1.originalIndex})" class="absolute top-2 right-2 bg-rose-600 hover:bg-rose-700 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-lg z-10 no-print" title="이 사진 삭제">
                                     <i class="fa-solid fa-trash-can"></i>
-                                </button>
+                                </button>` : ''}
                                 <div class="w-full bg-white p-3 flex items-center justify-center overflow-hidden" style="height: 360px;">
                                     <img src="${p1.imageUrl}" class="w-full h-full object-cover">
                                 </div>
@@ -1652,9 +1702,9 @@
 
                             ${p2 ? `
                             <div class="border-2 border-black flex flex-col relative group">
-                                <button onclick="deleteSheetPhotoIndex(${p2.originalIndex})" class="absolute top-2 right-2 bg-rose-600 hover:bg-rose-700 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-lg z-10 no-print" title="이 사진 삭제">
+                                ${isAdminMode ? `<button onclick="deleteSheetPhotoIndex(${p2.originalIndex})" class="absolute top-2 right-2 bg-rose-600 hover:bg-rose-700 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-lg z-10 no-print" title="이 사진 삭제">
                                     <i class="fa-solid fa-trash-can"></i>
-                                </button>
+                                </button>` : ''}
                                 <div class="w-full bg-white p-3 flex items-center justify-center overflow-hidden" style="height: 360px;">
                                     <img src="${p2.imageUrl}" class="w-full h-full object-cover">
                                 </div>
@@ -1756,9 +1806,15 @@
         };
 
         window.deleteSheetPhotoIndex = async function(idx) {
+            if (!isAdminMode) {
+                showToast("관리자 모드에서만 준공대지 사진을 삭제할 수 있습니다.");
+                return;
+            }
             if (!window.confirm(`정말로 준공대지 #${idx+1} 사진을 삭제하시겠습니까?`)) return;
             sheetPhotoList.splice(idx, 1);
             await saveGlobalPublicPhotosToCloud();
+            renderPrintSheets();
+            renderAdminPhotoEditorList();
             showToast("준공대지 사진이 삭제되었습니다.");
         };
 
@@ -1949,10 +2005,20 @@
                     </div>
                     <div class="flex-1 w-full space-y-2">
                         <div class="flex flex-wrap justify-between items-center text-xs gap-2">
-                            <span class="font-bold text-slate-800">촬영일: ${item.date}</span>
+                            <label class="font-bold text-slate-800">촬영일:
+                                <input type="date" value="${item.date || ''}" onchange="updateAdminPhotoDate(${item.originalIndex}, this.value)" class="ml-1 px-2 py-1 border border-slate-300 rounded-lg text-xs">
+                            </label>
                             <span class="text-[11px] text-slate-400">#${item.originalIndex + 1}번째 사진</span>
                         </div>
                         <input type="text" value="${item.description || ''}" onchange="updateAdminPhotoDesc(${item.originalIndex}, this.value)" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none" placeholder="작업 설명 수정">
+                        <div class="flex flex-wrap gap-1.5">
+                            <button onclick="moveSheetPhoto(${item.originalIndex},-1)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-[11px]"><i class="fa-solid fa-arrow-up mr-1"></i>앞으로</button>
+                            <button onclick="moveSheetPhoto(${item.originalIndex},1)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-[11px]"><i class="fa-solid fa-arrow-down mr-1"></i>뒤로</button>
+                            <label class="px-2.5 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold rounded-lg text-[11px] cursor-pointer">
+                                <i class="fa-solid fa-image mr-1"></i>사진 교체
+                                <input type="file" accept="image/*" class="hidden" onchange="replaceSheetPhoto(${item.originalIndex}, this)">
+                            </label>
+                        </div>
                     </div>
                     <button onclick="deleteSheetPhotoIndex(${item.originalIndex})" class="w-full sm:w-auto px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs shadow transition flex items-center justify-center gap-1">
                         <i class="fa-solid fa-trash-can"></i> 삭제
@@ -1968,6 +2034,39 @@
                 renderPrintSheets();
                 showToast("사진 작업 설명이 수정되었습니다.");
             }
+        };
+
+        window.updateAdminPhotoDate = async function(idx, newDate) {
+            if (!isAdminMode || !sheetPhotoList[idx]) return;
+            sheetPhotoList[idx].date = newDate;
+            await saveGlobalPublicPhotosToCloud();
+            renderPrintSheets();
+            showToast("촬영일이 수정되었습니다.");
+        };
+
+        window.moveSheetPhoto = async function(idx, direction) {
+            if (!isAdminMode) return;
+            const next = idx + direction;
+            if (next < 0 || next >= sheetPhotoList.length) return;
+            [sheetPhotoList[idx], sheetPhotoList[next]] = [sheetPhotoList[next], sheetPhotoList[idx]];
+            await saveGlobalPublicPhotosToCloud();
+            renderAdminPhotoEditorList();
+            renderPrintSheets();
+            showToast("사진 순서가 변경되었습니다.");
+        };
+
+        window.replaceSheetPhoto = function(idx, input) {
+            if (!isAdminMode || !input.files || !input.files[0]) return;
+            const reader = new FileReader();
+            reader.onload = async event => {
+                if (!sheetPhotoList[idx]) return;
+                sheetPhotoList[idx].imageUrl = event.target.result;
+                await saveGlobalPublicPhotosToCloud();
+                renderAdminPhotoEditorList();
+                renderPrintSheets();
+                showToast("사진이 교체되었습니다.");
+            };
+            reader.readAsDataURL(input.files[0]);
         };
 
         window.renderAdminUserTable = function() {
@@ -1997,6 +2096,52 @@
             renderAdminUserTable();
             showToast("계정이 삭제되었습니다.");
         };
+
+        const defaultSchedule = [
+            {name:'가설공사', start:'2026-08-03', days:10},
+            {name:'토공사', start:'2026-08-13', days:14},
+            {name:'기초공사', start:'2026-08-27', days:18},
+            {name:'철근콘크리트공사', start:'2026-09-14', days:35},
+            {name:'조적·방수공사', start:'2026-10-19', days:21},
+            {name:'창호·금속공사', start:'2026-11-09', days:18},
+            {name:'내·외부 마감공사', start:'2026-11-27', days:30},
+            {name:'준공정리·검사', start:'2026-12-27', days:10}
+        ];
+        let scheduleData = JSON.parse(localStorage.getItem('smart_schedule_v1') || 'null') || defaultSchedule.map(x=>({...x}));
+        const addDays = (date, days) => { const d = new Date(date+'T00:00:00'); d.setDate(d.getDate()+days); return getLocalDateString(d); };
+        const diffDays = (a,b) => Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000);
+        function renderSchedule() {
+            const wrap = document.getElementById('scheduleRows'); if (!wrap) return;
+            const base = new Date('2026-08-03T00:00:00');
+            wrap.innerHTML = scheduleData.map((it,i)=>{
+                const end = addDays(it.start,it.days);
+                const left = Math.max(0, Math.min(98, diffDays(getLocalDateString(base),it.start)/84*100));
+                const width = Math.max(2, Math.min(100-left,it.days/84*100));
+                return `<div class="grid grid-cols-[230px_130px_130px_1fr] border-b text-xs items-center">
+                    <div class="p-3 font-bold text-slate-800">${String(i+1).padStart(2,'0')}. ${it.name}</div>
+                    <div class="p-2"><input type="date" value="${it.start}" onchange="changeSchedule(${i},this.value)" class="w-full border rounded-lg p-1.5"></div>
+                    <div class="p-3 text-slate-600">${end}</div>
+                    <div class="p-3"><div class="h-7 bg-slate-100 rounded-lg relative overflow-hidden"><div class="absolute h-full rounded-lg bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-[10px] font-bold flex items-center px-2 whitespace-nowrap" style="left:${left}%;width:${width}%">${it.days}일</div></div></div>
+                </div>`;
+            }).join('');
+        }
+        window.changeSchedule = function(index,newStart) {
+            const shift = diffDays(scheduleData[index].start,newStart);
+            scheduleData[index].start = newStart;
+            for(let i=index+1;i<scheduleData.length;i++) scheduleData[i].start = addDays(scheduleData[i].start,shift);
+            localStorage.setItem('smart_schedule_v1',JSON.stringify(scheduleData)); renderSchedule(); showToast('후속 공정 일정이 함께 조정되었습니다.');
+        };
+        window.resetSchedule = function() { scheduleData=defaultSchedule.map(x=>({...x})); localStorage.removeItem('smart_schedule_v1'); renderSchedule(); showToast('초기 공정표로 복원되었습니다.'); };
+        window.openDrawing = function(path,title) {
+            const card=document.getElementById('drawingViewerCard'), frame=document.getElementById('drawingFrame'), link=document.getElementById('drawingOpenNew');
+            const activeDrawingSection = ['tabDrawingArchitectureView','tabDrawingStructureView']
+                .map(id => document.getElementById(id))
+                .find(el => el && !el.classList.contains('hidden'));
+            if (activeDrawingSection && card.parentElement !== activeDrawingSection) activeDrawingSection.appendChild(card);
+            document.getElementById('drawingViewerTitle').innerText=title; frame.src=path+'#view=FitH'; link.href=path; card.classList.remove('hidden'); card.scrollIntoView({behavior:'smooth'});
+        };
+        window.openDrawingFromTab = function(path,title) { selectSubTab('drawing','tabDrawingOverviewView'); setTimeout(()=>openDrawing(path,title),50); };
+        renderSchedule();
     </script>
 </body>
 </html>
